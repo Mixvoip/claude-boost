@@ -162,7 +162,7 @@ You don't maintain these files manually. Claude does it during normal developmen
 
 ## License
 
-MIT
+[MIT License](LICENSE)
 
 ---
 
