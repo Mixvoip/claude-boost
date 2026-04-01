@@ -1,0 +1,21 @@
+{
+  "model": "claude-opus-4-6",
+  "plansDirectory": "plans",
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/guard-destructive.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

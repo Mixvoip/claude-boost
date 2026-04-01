@@ -1,0 +1,8 @@
+# Claude Boost — gitignore for .claude directory
+# Managed by codewithali/claude-boost
+
+# Audit logs (contain timestamps and command history)
+logs/
+
+# Local settings override (user-specific, not shared)
+settings.local.json

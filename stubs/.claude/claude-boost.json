@@ -1,0 +1,33 @@
+{
+    "package": "claude-boost",
+    "version": "1.0.0",
+    "initialized_at": null,
+
+    "model": {
+        "default": "sonnet",
+        "review": "sonnet",
+        "orchestration": "sonnet",
+        "token_strategy": "efficient"
+    },
+
+    "permission_level": "standard",
+
+    "features": {
+        "registry": true,
+        "auto_skills": true,
+        "guard_hooks": true,
+        "decision_log": true,
+        "plans": true,
+        "git_integration": false,
+        "orchestration": false
+    },
+
+    "framework": null,
+    "git_platform": null,
+
+    "scan": {
+        "last_full_scan": null,
+        "last_incremental_scan": null,
+        "auto_scan_on_session": true
+    }
+}
