@@ -28,20 +28,21 @@ claude "Read .claude/init/learn.md and execute every task in it"
 
 ## What Claude Does
 
-When Claude reads `learn.md`, it runs a **12-phase interactive setup**:
+When Claude reads `learn.md`, it runs a **13-step interactive setup**:
 
-1. **Checks for previous progress** — resumes if interrupted
-2. **Discovers your stack** — languages, frameworks, databases, testing tools
-3. **Asks you questions** — model preference, permission level, features to enable
-4. **Drafts CLAUDE.md early** — safety net in case of interruption
-5. **Deep scans your codebase** — language-aware scanning (not just file listing)
-6. **Builds a registry** — every class, function, route, model cataloged in JSON
-7. **Detects duplicates** — synonym-aware comparison (30+ synonym groups)
-8. **Learns your conventions** — from your actual code, not imposed rules
-9. **Installs safety hooks** — blocks destructive commands via shell hooks
-10. **Maps dependencies** — traces who depends on what
-11. **Creates skills, decisions, git standards** — module docs, ADRs, branch/commit rules
-12. **Finalizes CLAUDE.md** — comprehensive project brain, read every session
+0. **Checks for previous progress** — resumes if interrupted
+1. **Discovers your stack** — languages, frameworks, databases, testing tools
+2. **Asks you questions** — model preference, permission level, features to enable
+3. **Drafts CLAUDE.md early** — safety net in case of interruption
+4. **Deep scans your codebase** — language-aware scanning (not just file listing)
+5. **Builds a registry** — every class, function, route, model cataloged in JSON
+6. **Detects duplicates** — synonym-aware comparison (30+ synonym groups)
+7. **Learns your conventions** — from your actual code, not imposed rules
+8. **Installs safety hooks** — blocks destructive commands via shell hooks
+9. **Maps dependencies** — traces who depends on what
+10. **Creates skills, decisions, git standards** — module docs, ADRs, branch/commit rules
+11. **Finalizes CLAUDE.md** — comprehensive project brain, read every session
+12. **Final summary** — reports what was created and next steps
 
 If interrupted at any point, just say "continue" or re-paste learn.md. Claude reads `learn-progress.json` and picks up exactly where it left off.
 
@@ -53,20 +54,27 @@ If interrupted at any point, just say "continue" or re-paste learn.md. Claude re
 your-project/
 ├── CLAUDE.md                        <- Claude reads this every session
 ├── .claude/
+│   ├── .gitignore                   <- Ignores logs/, settings.local.json, learn-progress.json
 │   ├── claude-boost.json            <- Your config (model, permissions, features)
-│   ├── settings.json                <- Claude permission settings
+│   ├── settings.json                <- Claude permission settings & hook registration
 │   ├── registry.json                <- Every class, service, function cataloged
-│   ├── learn-progress.json          <- Resume tracker
+│   ├── guard-rules.yaml             <- Safety rule definitions
+│   ├── guidelines.md                <- Conventions learned from your code
+│   ├── learn-progress.json          <- Resume tracker (gitignored)
 │   ├── init/                        <- The learning prompts
 │   │   ├── learn.md
 │   │   ├── guard-rules.md
 │   │   └── templates/
-│   ├── guidelines/                  <- Conventions learned from your code
+│   │       ├── skill.md
+│   │       └── decision.md
+│   ├── guidelines/                  <- Git standards and other guides
 │   ├── skills/                      <- Module documentation
 │   ├── decisions/                   <- Architectural decision records
-│   └── hooks/                       <- Safety & convention hooks
-│       ├── preToolUse.sh
-│       └── postToolUse.sh
+│   ├── plans/                       <- Implementation plans
+│   ├── hooks/                       <- Safety & convention hooks
+│   │   ├── preToolUse.sh
+│   │   └── postToolUse.sh
+│   └── logs/                        <- Guard logs (gitignored)
 ```
 
 ---
