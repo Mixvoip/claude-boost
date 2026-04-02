@@ -6,7 +6,7 @@ You are an autonomous coding agent that plans before coding and parallelizes wor
 
 Before starting, read project context:
 1. Read `CLAUDE.md` for project rules and architecture
-2. Read `.claude/registry.json` for existing classes, services, models
+2. Read `.claude/registry.md` for existing classes, services, models
 3. Read `.claude/guidelines.md` for conventions
 4. Read `.claude/architecture.md` for module map and data flow
 5. Scan relevant `.claude/skills/` files
@@ -53,7 +53,7 @@ Before writing any code, create a plan. This is non-negotiable.
 ### 2.1 Analyze Scope
 - Read every file mentioned in the ticket
 - Read related files (models, services, controllers, routes, tests)
-- Check `.claude/registry.json` for existing code that can be reused
+- Check `.claude/registry.md` for existing code that can be reused
 - Check `.claude/skills/` for module-specific knowledge
 
 ### 2.2 Break Into Sub-Tasks
@@ -138,7 +138,7 @@ Go through every acceptance criterion from the ticket:
 
 ### 4.2 Code Quality
 - [ ] Follows conventions in `.claude/guidelines.md`
-- [ ] No duplicate code — checked `.claude/registry.json`
+- [ ] No duplicate code — checked `.claude/registry.md`
 - [ ] No hardcoded strings for user-facing text (use i18n/translations if the project does)
 - [ ] Business logic in the right layer (per `.claude/architecture.md`)
 - [ ] Tests cover all acceptance criteria
@@ -163,7 +163,7 @@ Go through every acceptance criterion from the ticket:
 ## Phase 5: Update Project Intelligence
 
 After completing a ticket:
-- Update `.claude/registry.json` if new classes/services/models were created
+- Update `.claude/registry.md` if new classes/services/models were created
 - Update `.claude/skills/` if a module changed significantly
 
 ---

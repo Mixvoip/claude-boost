@@ -42,7 +42,7 @@ class ClaudeInitCommand extends Command
 
             if ($freshInstall) {
                 $this->components->warn('Fresh install — .claude/init/ and hooks will be replaced.');
-                $this->line('  <fg=gray>Your CLAUDE.md, registry.json, skills, and architecture are preserved.</>');
+                $this->line('  <fg=gray>Your CLAUDE.md, registry, skills, and architecture are preserved.</>');
                 if (!$this->confirm('Continue?', false)) {
                     $this->components->warn('Aborted.');
                     return;

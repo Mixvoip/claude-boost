@@ -44,7 +44,7 @@ When Claude reads `learn.md`, it runs a **12-step interactive setup**:
 2. **Asks you questions** — permission level, features to enable
 3. **Drafts CLAUDE.md early** — safety net in case of interruption
 4. **Deep scans your codebase** — language-aware scanning (not just file listing)
-5. **Builds a registry** — every class, function, route, model cataloged in JSON
+5. **Builds a registry** — every class, function, route, model cataloged in grouped markdown
 6. **Detects duplicates** — synonym-aware comparison (30+ synonym groups)
 7. **Learns your conventions** — from your actual code, not imposed rules
 8. **Installs safety hook** — blocks destructive commands via shell hook
@@ -67,7 +67,7 @@ your-project/
 ├── .claude/
 │   ├── .gitignore                   <- Ignores logs/, settings.local.json, learn-progress.json
 │   ├── settings.json                <- Permissions, hooks, permission_level
-│   ├── registry.json                <- Every class, service, function cataloged
+│   ├── registry.md                  <- Every class, service, function cataloged
 │   ├── architecture.md              <- Module map, data flow (read on-demand)
 │   ├── guidelines.md                <- Conventions learned from your code
 │   ├── learn-progress.json          <- Resume tracker (gitignored)
@@ -227,7 +227,7 @@ Returned tickets go back to the Developer (max 2 returns, then blocked for human
 
 CLAUDE.md instructs Claude to keep everything updated:
 
-- **New code created** -> Claude updates registry.json
+- **New code created** -> Claude updates registry.md
 - **Module changed** -> Claude updates the skill file
 - **Major feature lands** -> Claude updates CLAUDE.md
 
@@ -256,7 +256,7 @@ Sensitive files like `learn-progress.json`, `settings.local.json`, and `logs/` a
 | File | Shared? | Why |
 |------|---------|-----|
 | `CLAUDE.md` | Yes | Project essentials — every developer's Claude reads this |
-| `registry.json` | Yes | Codebase catalog — prevents duplicate code |
+| `registry.md` | Yes | Codebase catalog — prevents duplicate code |
 | `architecture.md` | Yes | Module map & data flow — shared knowledge |
 | `guidelines.md` | Yes | Conventions — consistent code style |
 | `skills/` | Yes | Module docs — shared knowledge |

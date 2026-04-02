@@ -28,7 +28,7 @@ class ClaudeDoctorCommand extends Command
         $this->checkFile('.claude/init/learn.md', 'Learning guide (learn.md)');
         $this->checkFile('.claude/init/guard-rules.md', 'Guard rules reference');
         $this->checkFile('CLAUDE.md', 'Claude instructions (project root)');
-        $this->checkFile('.claude/registry.json', 'Codebase registry');
+        $this->checkRegistryFile();
 
         // ── Documentation ───────────────────────────────────────────────
         $this->section('Documentation');
@@ -191,48 +191,70 @@ class ClaudeDoctorCommand extends Command
         }
     }
 
+    private function checkRegistryFile(): void
+    {
+        $mdExists = File::exists(base_path('.claude/registry.md'));
+        $jsonExists = File::exists(base_path('.claude/registry.json'));
+
+        if ($mdExists) {
+            $this->pass('Codebase registry (registry.md)');
+        } elseif ($jsonExists) {
+            $this->checkWarn('Codebase registry uses old JSON format', 'Re-run learn.md to migrate to registry.md (77% smaller).');
+        } else {
+            $this->checkFail('Codebase registry — missing', 'Claude creates this during learn.md execution.');
+        }
+    }
+
     private function checkRegistryHealth(): void
     {
-        $path = base_path('.claude/registry.json');
-        if (!File::exists($path)) {
-            $this->checkWarn('Registry not built yet', 'Claude builds this during learn.md execution.');
-            return;
-        }
+        $mdPath = base_path('.claude/registry.md');
+        $jsonPath = base_path('.claude/registry.json');
 
-        $data = json_decode(File::get($path), true);
-        if ($data === null) {
-            $this->checkFail('Registry file is corrupt — invalid JSON');
-            return;
-        }
+        if (File::exists($mdPath)) {
+            $content = File::get($mdPath);
+            $entryCount = preg_match_all('/^- \w/m', $content);
 
-        $this->pass('Registry file is valid JSON');
-
-        // Count entries across any structure (V2 registry is flexible)
-        $total = 0;
-        foreach ($data as $key => $value) {
-            if ($key === 'meta' || $key === 'duplicates' || $key === 'dependencies') {
-                continue;
-            }
-            if (is_array($value)) {
-                $total += count($value);
-            }
-        }
-
-        if ($total === 0) {
-            $this->checkWarn('Registry is empty — no code indexed');
-        } else {
-            $this->pass("Registry has {$total} entries");
-        }
-
-        // Check staleness
-        $lastUpdated = $data['meta']['last_updated'] ?? null;
-        if ($lastUpdated) {
-            $daysSince = (int) ((time() - strtotime($lastUpdated)) / 86400);
-            if ($daysSince > 14) {
-                $this->checkWarn("Registry last updated {$daysSince} days ago", 'Re-run learn.md to refresh.');
+            if ($entryCount === 0) {
+                $this->checkWarn('Registry is empty — no code indexed');
             } else {
-                $this->pass("Registry is fresh (updated {$daysSince}d ago)");
+                $this->pass("Registry has {$entryCount} entries");
             }
+
+            // Check staleness from header
+            if (preg_match('/Scanned:\s*(\d{4}-\d{2}-\d{2})/', $content, $matches)) {
+                $daysSince = (int) ((time() - strtotime($matches[1])) / 86400);
+                if ($daysSince > 14) {
+                    $this->checkWarn("Registry last updated {$daysSince} days ago", 'Re-run learn.md to refresh.');
+                } else {
+                    $this->pass("Registry is fresh (updated {$daysSince}d ago)");
+                }
+            }
+        } elseif (File::exists($jsonPath)) {
+            $data = json_decode(File::get($jsonPath), true);
+            if ($data === null) {
+                $this->checkFail('Registry file is corrupt — invalid JSON');
+                return;
+            }
+
+            $this->pass('Registry file is valid JSON (legacy format)');
+
+            $total = 0;
+            foreach ($data as $key => $value) {
+                if ($key === 'meta' || $key === 'duplicates' || $key === 'dependencies') {
+                    continue;
+                }
+                if (is_array($value)) {
+                    $total += count($value);
+                }
+            }
+
+            if ($total === 0) {
+                $this->checkWarn('Registry is empty — no code indexed');
+            } else {
+                $this->pass("Registry has {$total} entries");
+            }
+        } else {
+            $this->checkWarn('Registry not built yet', 'Claude builds this during learn.md execution.');
         }
     }
 
@@ -292,7 +314,7 @@ class ClaudeDoctorCommand extends Command
             $this->pass("CLAUDE.md has content ({$size} bytes)");
         }
 
-        if (str_contains($content, 'registry.json') || str_contains($content, 'registry')) {
+        if (str_contains($content, 'registry.md') || str_contains($content, 'registry.json') || str_contains($content, 'registry')) {
             $this->pass('CLAUDE.md references registry');
         } else {
             $this->checkWarn('CLAUDE.md does not reference registry', 'Claude may not check for duplicates');

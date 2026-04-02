@@ -15,7 +15,7 @@ Detect the git platform from `.claude/settings.json` (`git_platform` field) or b
 Before asking anything, build context silently:
 
 1. Read `CLAUDE.md` for project rules and architecture
-2. Read `.claude/registry.json` for existing classes, services, models
+2. Read `.claude/registry.md` for existing classes, services, models
 3. Read `.claude/guidelines.md` for conventions
 4. Read `.claude/architecture.md` for module map and data flow
 5. Scan relevant `.claude/skills/` files
@@ -73,7 +73,7 @@ Based on the user's answers, do a deep scan:
    - Models, services, controllers, routes, tests, config, translations
    - Use Grep/Glob to find related code across the codebase
 
-2. **Check for existing code to reuse** — search registry.json and the codebase
+2. **Check for existing code to reuse** — search registry.md and the codebase
    - Are there services that already do part of this?
    - Are there similar features implemented elsewhere that can be followed as a pattern?
 

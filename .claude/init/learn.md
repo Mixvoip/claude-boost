@@ -12,7 +12,7 @@ No matter what happens, you MUST produce these files before finishing:
 1. **`CLAUDE.md` in the PROJECT ROOT** — This is the #1 most important output. Without it,
    no future Claude session will know anything about this project. If you do nothing else,
    you MUST create this file.
-2. **`.claude/registry.json`** — JSON file (never markdown) cataloging the codebase.
+2. **`.claude/registry.md`** — Grouped markdown file cataloging the codebase.
 3. **`.claude/architecture.md`** — Module map, data flow, key patterns (read on-demand).
 4. **`.claude/guidelines.md`** — Conventions discovered from your code.
 
@@ -59,6 +59,14 @@ Check if `.claude/learn-progress.json` exists.
 > Settings preserved. Starting scan now.
 
 5. Create `learn-progress.json` with config reconstructed from existing files
+5b. **Migration check:** If `.claude/registry.json` exists but `.claude/registry.md` does not:
+    - Read registry.json
+    - Convert to grouped markdown format: group entries by `type`, one line per entry with `- {Name}: {purpose} [{tags}]`
+    - Drop `file`, `depends_on`, `public_methods`, `language` fields — Claude uses Glob/Read for these
+    - Write `.claude/registry.md`
+    - Delete `.claude/registry.json`
+    - Update `CLAUDE.md` reference from `registry.json` to `registry.md`
+    - Run `grep -rl "registry.json" .claude/` and update any other references found
 6. Mark these phases as already done (SKIP them — do NOT re-run):
    - `discovery` — already configured
    - `settings` — already in settings.json
@@ -308,7 +316,7 @@ even if the scan fails, gets cancelled, or hits context limits.
 Stack: {language}/{framework} | Permissions: `{permission_level}`
 
 ## Context Files (read on-demand, not every task)
-- `.claude/registry.json` — search here ONLY when creating new code, to avoid duplicates
+- `.claude/registry.md` — search here ONLY when creating new code, to avoid duplicates
 - `.claude/architecture.md` — read ONLY when you need to understand module boundaries or data flow
 - `.claude/guidelines.md` — read ONLY when unsure about project conventions
 - `.claude/skills/{module}.md` — read ONLY when modifying that specific module
@@ -371,74 +379,55 @@ Update progress: add `"scanning"` to `completed_phases`, set `current_phase` to 
 
 **Skip if `registry` is in `completed_phases`.**
 
-### Create `.claude/registry.json` (MUST be JSON, never markdown)
+### Create `.claude/registry.md` (MUST be grouped markdown, never JSON)
 
-If a registry.json already exists (from a prior run), ENRICH it — don't replace:
+If a `registry.md` already exists (from a prior run), ENRICH it — don't replace:
 - Fix purpose descriptions by reading actual code
-- Add missing tags
-- Add missing entries
+- Add missing entries for new classes
+- Remove entries for deleted classes
+- Update tags if module boundaries changed
 
-If creating new:
+If a `registry.json` exists (old format), MIGRATE it:
+- Read registry.json, extract name + type + purpose + tags from each entry
+- Write as grouped markdown (format below)
+- Delete registry.json after successful migration
 
-```json
-{
-   "scanned_at": "{ISO 8601 timestamp}",
-   "scanned_by": "learn",
-   "stack": "{language}/{framework}",
-   "stats": {
-      "total": 0,
-      "by_type": {}
-   },
-   "entries": {}
-}
-```
+If creating new, use this format:
 
-### Registry Entry Format (Universal — Any Language)
+```markdown
+# Registry — {N} entries | Stack: {language}/{framework} | Scanned: {ISO 8601 timestamp}
 
-```json
-"entries": {
-"InvoiceService": {
-"file": "app/Services/InvoiceService.php",
-"type": "service",
-"purpose": "Handles invoice creation, calculation, and payment status",
-"tags": ["billing", "invoices", "payments"],
-"public_methods": ["create", "calculateTotal", "markAsPaid"],
-"depends_on": ["InvoiceRepository", "TaxCalculator"],
-"language": "php"
-},
-"useAuth": {
-"file": "src/hooks/useAuth.ts",
-"type": "hook",
-"purpose": "Authentication state management and login/logout",
-"tags": ["auth", "hooks", "state"],
-"exports": ["useAuth", "AuthProvider"],
-"depends_on": ["AuthContext", "api/auth"],
-"language": "typescript"
-},
-"UserViewSet": {
-"file": "api/views/user.py",
-"type": "view",
-"purpose": "REST API endpoints for user CRUD operations",
-"tags": ["users", "api", "rest"],
-"public_methods": ["list", "create", "retrieve", "update", "destroy"],
-"depends_on": ["UserSerializer", "UserModel"],
-"language": "python"
-}
-}
+## service (12)
+- InvoiceService: Handles invoice creation, calculation, and payment status [billing,invoices,payments]
+- ScheduleEntryService: Core entry management with recurrence expansion [schedules,entries,business-logic]
+
+## controller (8)
+- InvoiceController: REST endpoints for invoice CRUD and payment webhooks [billing,api]
+- UserController: User profile management and team switching [users,api]
+
+## model (15)
+- Invoice: Eloquent model with payment status scopes and tax calculations [billing,database]
+- User: Core user model with team relationships and role checks [users,auth,database]
 ```
 
 **Type values by language:**
 
 | PHP | JS/TS | Python | Go | Ruby |
-|-----|-------|--------|-----|------|
+|-----|-------|--------|----|------|
 | class, service, controller, model, trait, interface, enum, middleware, job, event, listener, helper | component, hook, store, util, api-route, type, middleware, context, provider | class, model, view, serializer, signal, task, form, middleware, util | struct, handler, middleware, service, repository, util | class, model, controller, service, job, concern |
 
 ### Rules
 - Only include files you actually read — don't guess from filenames
 - Purpose must describe what the code DOES, not repeat the name
 - Include the important 80% — skip trivial/empty files
-- Update `stats` counts to match actual entries
-- For `depends_on`: list only direct dependencies you confirmed by reading code
+- Groups sorted by count descending (most entries first)
+- One line per entry — never multi-line
+- Tags enable cross-module search (tag related controllers + services + models the same)
+- **No file paths** — Claude uses `Glob("**/{ClassName}.*")` (faster, always accurate, never stale)
+- **No depends_on** — Claude reads actual imports when needed
+- **No public_methods** — Claude reads the file when modifying it
+- **No language field** — redundant for single-language projects; multi-lang projects use the header
+- Update the entry count in the header and each group heading to match actual entries
 
 Update progress: add `"registry"` to `completed_phases`, set `current_phase` to `"duplicates"`
 
@@ -456,21 +445,16 @@ Compare functions/methods using semantic similarity — functions that accomplis
 
 ### Save to Registry
 
-Add a `duplicates` section to registry.json:
+Add a `## Potential Duplicates` section at the bottom of `registry.md`:
 
-```json
-"duplicates": [
-{
-"a": "App\\Helpers\\formatAmount()",
-"b": "App\\Services\\MoneyFormatter::format()",
-"similarity": "high",
-"reason": "Both format monetary values with currency symbols",
-"suggestion": "Consolidate into MoneyFormatter::format() — more complete implementation"
-}
-]
+```markdown
+## Potential Duplicates
+- `App\Helpers\formatAmount()` ↔ `App\Services\MoneyFormatter::format()` — Both format monetary values with currency symbols. Suggest: consolidate into MoneyFormatter (more complete)
+- `App\Http\Controllers\Api\UserController::show()` ↔ `App\Http\Controllers\ProfileController::index()` — Both return user profile data. Suggest: consolidate into ProfileController
 ```
 
 Report findings to the user. Ask if any are intentional (not real duplicates).
+Remove confirmed non-duplicates from the section.
 
 Update progress: add `"duplicates"` to `completed_phases`, set `current_phase` to `"conventions"`
 
@@ -590,17 +574,12 @@ For every class/module in the registry:
 2. Trace constructor injection / dependency injection
 3. Trace method calls to other services
 
-Add to registry.json:
+Add a `## Dependency Graph` section to `registry.md`:
 
-```json
-"dependency_graph": {
-"InvoiceService": {
-"depends_on": ["InvoiceRepository", "TaxCalculator", "EventDispatcher"],
-"depended_by": ["InvoiceController", "BillingJob"],
-"import_count": 3,
-"risk": "high"
-}
-}
+```markdown
+## Dependency Graph
+- InvoiceService → InvoiceRepository, TaxCalculator, EventDispatcher ← InvoiceController, BillingJob [high-risk, 3 imports]
+- UserService → UserRepository, CacheManager ← UserController, AuthMiddleware [medium-risk, 2 imports]
 ```
 
 Flag:
@@ -733,13 +712,13 @@ Permissions: `{permission_level}`
 {Business rules — things you'd get wrong without knowing. If none, omit this section.}
 
 ## Context Files (read on-demand, not every task)
-- `.claude/registry.json` — search ONLY when creating new code, to avoid duplicates
+- `.claude/registry.md` — search ONLY when creating new code, to avoid duplicates
 - `.claude/architecture.md` — read ONLY when you need to understand module boundaries or data flow
 - `.claude/guidelines.md` — read ONLY when unsure about conventions or patterns
 - `.claude/skills/{module}.md` — read ONLY when modifying that specific module
 
 ## Maintenance (only after adding/removing top-level classes, services, or modules)
-- Update .claude/registry.json if a top-level class/service/module was added or removed
+- Update .claude/registry.md if a top-level class/service/module was added or removed
 - Update .claude/skills/{module}.md if a module's public API or structure changed
 
 ## Safety
@@ -764,7 +743,7 @@ Read back these files and confirm they exist and are valid:
 
 - [ ] `CLAUDE.md` in the **project root** (not inside .claude/)
 - [ ] `.claude/settings.json` with correct permissions and permission_level
-- [ ] `.claude/registry.json` as valid JSON with entries
+- [ ] `.claude/registry.md` with grouped entries
 - [ ] `.claude/architecture.md` with real project knowledge
 - [ ] `.claude/guidelines.md` with conventions (if feature enabled)
 - [ ] `.claude/hooks/preToolUse.sh` executable (if safety enabled)
@@ -780,12 +759,12 @@ If any are missing, create them before reporting completion.
 > | File | Status |
 > |------|--------|
 > | `CLAUDE.md` | Project essentials — loaded every session (~20 lines) |
-> | `.claude/registry.json` | {N} entries cataloged |
+> | `.claude/registry.md` | {N} entries cataloged |
 > | `.claude/architecture.md` | Module map & data flow (read on-demand) |
 > | `.claude/guidelines.md` | Conventions documented (read on-demand) |
 > | `.claude/hooks/` | Safety guards installed |
 > | `.claude/skills/` | {N} module guides (read on-demand) |
-> | Duplicates found | {N} potential (see registry.json) |
+> | Duplicates found | {N} potential (see registry.md) |
 > | Dependencies mapped | mapped/skipped |
 >
 > **Every future Claude session will automatically know your project.**
@@ -804,7 +783,7 @@ These rules apply in **every** future session, not just this one. Claude follows
 from CLAUDE.md's "Context Files" and "Maintenance" sections.
 
 ### When Creating New Code
-1. Search `.claude/registry.json` for existing similar functions/classes — **only when creating, not every task**
+1. Search `.claude/registry.md` for existing similar functions/classes — **only when creating, not every task**
 2. If the user asks to create something that already exists, TELL THEM
 
 ### When Modifying Code
@@ -812,7 +791,7 @@ from CLAUDE.md's "Context Files" and "Maintenance" sections.
 2. Check conventions in `.claude/guidelines.md` only if unsure about patterns
 
 ### Maintenance (only after adding/removing top-level classes, services, or modules — not methods, helpers, or small files)
-1. Update `.claude/registry.json` only if a top-level class/service/module was added or removed
+1. Update `.claude/registry.md` only if a top-level class/service/module was added or removed
 2. Update skill files only if a module's public API or structure changed
 3. Update `CLAUDE.md` only if major architecture changes happen
 
@@ -823,7 +802,7 @@ from CLAUDE.md's "Context Files" and "Maintenance" sections.
 - **ASK the user and wait for answers** — never assume defaults silently
 - **CLAUDE.md MUST be created in the project root** — draft in Phase 3, final in Phase 11
 - **CLAUDE.md must be lean** — 15-30 lines, details go in .claude/architecture.md and .claude/guidelines.md
-- **Registry is JSON** (`.claude/registry.json`) — NEVER create registry as markdown
+- **Registry is grouped markdown** (`.claude/registry.md`) — one line per entry, grouped by type, never JSON
 - **Settings go in `.claude/settings.json`** — single source of truth for permissions and hooks
 - **Stay on task** — do NOT suggest installing unrelated tools
 - **Update progress after each phase** — this enables resume if interrupted

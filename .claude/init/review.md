@@ -8,7 +8,7 @@ Before starting, read project context:
 1. Read `CLAUDE.md` for project rules
 2. Read `.claude/guidelines.md` for conventions
 3. Read `.claude/architecture.md` for module map and data flow
-4. Read `.claude/registry.json` for existing code
+4. Read `.claude/registry.md` for existing code
 
 Detect the git platform from `.claude/settings.json` (`git_platform` field) or by checking:
 - `.github/` directory → GitHub (use `gh`)
@@ -56,7 +56,7 @@ Your job: check CODE QUALITY and CONSISTENCY only. Do not test functionality.
 Review the diff against these rules:
 1. **Conventions** — matches patterns in .claude/guidelines.md
 2. **Architecture** — code is in the right layer per .claude/architecture.md
-3. **DRY** — check .claude/registry.json for existing functions that could be reused
+3. **DRY** — check .claude/registry.md for existing functions that could be reused
 4. **Naming** — consistent with project conventions (class names, methods, files)
 5. **Typing** — type hints, return types used consistently with project style
 6. **No unnecessary additions** — no extra features, docstrings, or refactoring beyond ticket scope

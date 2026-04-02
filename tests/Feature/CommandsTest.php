@@ -34,7 +34,7 @@ class CommandsTest extends TestCase
     private function cleanupClaudeDirectory(): void
     {
         $paths = [
-            base_path('.claude/registry.json'),
+            base_path('.claude/registry.md'),
             base_path('.claude/CLAUDE.md'),
             base_path('.claude/.gitignore'),
             base_path('.claude/settings.json'),

@@ -31,7 +31,7 @@ If a file is not on this list, **do not touch it**.
 .claude/init/AGENTS.md
 .claude/init/templates/skill.md
 .claude/hooks/preToolUse.sh
-.claude/registry.json
+.claude/registry.md
 .claude/architecture.md
 .claude/guidelines.md
 .claude/learn-progress.json
@@ -86,7 +86,7 @@ Ask the user:
 > **Before I remove Claude Boost, would you like to keep any of these files?**
 >
 > 1. **CLAUDE.md** — Keep the current version
-> 2. **Registry** (.claude/registry.json)
+> 2. **Registry** (.claude/registry.md)
 > 3. **Architecture** (.claude/architecture.md)
 > 4. **Guidelines** (.claude/guidelines.md)
 > 5. **Skills** (.claude/skills/ contents)
@@ -109,7 +109,7 @@ Copy each file individually (no recursive copy of unknown directories):
 ```
 cp CLAUDE.md .claude-boost-backup/CLAUDE.md
 cp .claude/settings.json .claude-boost-backup/settings.json
-cp .claude/registry.json .claude-boost-backup/registry.json
+cp .claude/registry.md .claude-boost-backup/registry.md
 cp .claude/architecture.md .claude-boost-backup/architecture.md
 cp .claude/guidelines.md .claude-boost-backup/guidelines.md
 cp .claude/hooks/preToolUse.sh .claude-boost-backup/preToolUse.sh
@@ -199,7 +199,7 @@ Wait for "yes". Then delete each file individually.
 8. Remove `.claude/guidelines/` if empty
 9. If guidelines NOT marked "keep": `.claude/guidelines.md`
 10. If architecture NOT marked "keep": `.claude/architecture.md`
-11. If registry NOT marked "keep": `.claude/registry.json`
+11. If registry NOT marked "keep": `.claude/registry.md`
 12. `.claude/.gitignore`
 13. `.claude/init/templates/skill.md`
 14. Remove `.claude/init/templates/` if empty
