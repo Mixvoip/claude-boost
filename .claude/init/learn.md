@@ -311,11 +311,11 @@ even if the scan fails, gets cancelled, or hits context limits.
 
 Stack: {language}/{framework} | Permissions: `{permission_level}`
 
-## Before Writing Code
-1. Check .claude/registry.json — don't duplicate existing code
-2. Read .claude/architecture.md for module map and data flow
-3. Read .claude/guidelines.md for project conventions
-4. Read .claude/skills/{module}.md before touching a complex module
+## Context Files (read on-demand, not every task)
+- `.claude/registry.json` — search here ONLY when creating new code, to avoid duplicates
+- `.claude/architecture.md` — read ONLY when you need to understand module boundaries or data flow
+- `.claude/guidelines.md` — read ONLY when unsure about project conventions
+- `.claude/skills/{module}.md` — read ONLY when modifying that specific module
 
 ## Safety
 Guard hooks active. See .claude/init/guard-rules.md
@@ -1038,15 +1038,15 @@ Permissions: `{permission_level}`
 ## Domain Rules
 {Business rules — things you'd get wrong without knowing. If none, omit this section.}
 
-## Before Writing Code
-1. Search .claude/registry.json — don't duplicate existing code
-2. Read .claude/architecture.md for module map and data flow
-3. Read .claude/guidelines.md for project conventions
-4. Read .claude/skills/{module}.md before touching a complex module
+## Context Files (read on-demand, not every task)
+- `.claude/registry.json` — search ONLY when creating new code, to avoid duplicates
+- `.claude/architecture.md` — read ONLY when you need to understand module boundaries or data flow
+- `.claude/guidelines.md` — read ONLY when unsure about conventions or patterns
+- `.claude/skills/{module}.md` — read ONLY when modifying that specific module
 
-## After Every Task
-- Update .claude/registry.json if you created/removed/renamed classes or functions
-- Update .claude/skills/ if a module changed significantly
+## Maintenance
+- Update .claude/registry.json when you create/remove/rename classes or functions
+- Update .claude/skills/ when a module changes significantly
 
 ## Safety
 Guard hooks active. See .claude/init/guard-rules.md for full list.
@@ -1106,29 +1106,22 @@ Delete `.claude/learn-progress.json` — the process is complete.
 
 ## Ongoing Rules (ALWAYS Follow in Future Sessions)
 
-These rules apply in **every** future session, not just this one. Claude should read these
-from CLAUDE.md's "Before Writing Code" and "After Every Task" sections.
+These rules apply in **every** future session, not just this one. Claude follows these
+from CLAUDE.md's "Context Files" and "Maintenance" sections.
 
-### Before Creating New Code
-1. Search `.claude/registry.json` for existing similar functions/classes
-2. Check the `duplicates` section — is something similar already flagged?
-3. If the user asks to create something that already exists, TELL THEM
+### When Creating New Code
+1. Search `.claude/registry.json` for existing similar functions/classes — **only when creating, not every task**
+2. If the user asks to create something that already exists, TELL THEM
 
-### After Writing/Editing Any File
-1. Does it match conventions in `.claude/guidelines.md`?
-2. If it doesn't, fix it or ask the user
-3. Update `.claude/registry.json` if you added/removed/renamed classes or functions
+### When Modifying Code
+1. Read `.claude/skills/{module}.md` only if you're modifying that specific module
+2. Check conventions in `.claude/guidelines.md` only if unsure about patterns
+3. If a file has many dependents (check registry), warn the user
 
-### When Modifying High-Impact Files
-1. Check dependency graph in registry.json (if mapped)
-2. If a file has many dependents, warn the user
-3. Suggest running tests after changes
-
-### Periodically
-1. Keep `registry.json` up to date as code changes
+### Maintenance (after changes, not before)
+1. Update `.claude/registry.json` if you created/removed/renamed classes or functions
 2. Update skill files when modules change significantly
-3. Update `guidelines.md` if team patterns evolve
-4. Update `CLAUDE.md` if major architecture changes happen
+3. Update `CLAUDE.md` if major architecture changes happen
 
 ---
 

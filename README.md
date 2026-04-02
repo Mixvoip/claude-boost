@@ -96,7 +96,7 @@ your-project/
 | Problem | How This Solves It |
 |---------|-------------------|
 | Claude creates `formatCurrency()` when `convertMoney()` exists | Registry + synonym-aware duplicate detection |
-| Claude forgets your architecture every session | CLAUDE.md is read automatically every session |
+| Claude forgets your architecture every session | Lean CLAUDE.md loaded every session, deep files read on-demand |
 | You re-explain patterns and conventions | Guidelines and skills persist across sessions |
 | Claude doesn't know your domain rules | Domain rules are in CLAUDE.md |
 | Works only for one language | Works for any language — Claude reads any code |
