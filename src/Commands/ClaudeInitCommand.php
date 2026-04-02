@@ -198,7 +198,7 @@ class ClaudeInitCommand extends Command
         ];
 
         foreach ($hookMap as $hookType => $command) {
-            $newHook = ['type' => 'command', 'command' => $command];
+            $newHook = ['type' => 'command', 'command' => $command, 'timeout' => 30];
 
             if ($freshInstall) {
                 // Replace existing hooks of this type

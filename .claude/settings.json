@@ -12,7 +12,7 @@
           {
             "type": "command",
             "command": "bash stubs/hooks/preToolUse.sh",
-            "timeout": 5
+            "timeout": 30
           }
         ]
       }
