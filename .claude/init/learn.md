@@ -33,47 +33,50 @@ scan code, and create the intelligence files listed above.
 
 ---
 
-## Step 0: Check for Previous Progress (ALWAYS DO THIS FIRST)
+## Step 0: Determine Mode (ALWAYS DO THIS FIRST)
 
-Before doing anything, check if `.claude/learn-progress.json` exists.
+**You MUST execute one of the three modes below. You may NEVER say "everything exists, nothing to do" or skip execution. The user ran this file because they WANT a scan. Always proceed.**
 
-**If it EXISTS — this is a RESUME:**
+Check if `.claude/learn-progress.json` exists.
+
+### Mode A: RESUME (learn-progress.json EXISTS)
 1. Read the file
 2. Check `completed_phases` array — skip all completed phases
 3. Check `current_phase` and `current_phase_progress` — resume from that exact point
 4. Read `user_config` — DO NOT re-ask questions, the answers are saved
-5. Tell the user: "I see we were interrupted during {current_phase}. Picking up where we left off."
+5. Tell the user: "Resuming from {current_phase}..."
 6. Jump directly to the incomplete phase
 
-**If it DOES NOT exist — check for REFRESH mode:**
+### Mode B: REFRESH (no learn-progress.json, BUT `.claude/settings.json` has `permission_level` AND `CLAUDE.md` exists)
 
-Check if `.claude/settings.json` exists AND has a `permission_level` field AND `CLAUDE.md` exists in the project root. If ALL three are true, this project was already set up — enter **Refresh Mode**.
-
-### Refresh Mode
-
-This mode re-scans the codebase and updates intelligence files. No questions asked — just scan and update.
+**This is the most common re-run scenario. The user already set up the project and wants to update after code changes. DO NOT skip this. DO NOT say "files already exist". EXECUTE THE SCAN.**
 
 1. Read `.claude/settings.json` to get `permission_level`, `git_platform`, and `permissions`
 2. Read `CLAUDE.md` to extract the project name, description, and stack
 3. Read existing `.claude/registry.json`, `.claude/guidelines.md`, `.claude/architecture.md` if they exist
-4. Tell the user (no confirmation needed — just inform and proceed):
+4. Tell the user:
 
-> **Refresh mode — updating project intelligence.**
-> Settings preserved. Scanning codebase for changes...
+> **Refresh mode — re-scanning your codebase for changes.**
+> Settings preserved. Starting scan now.
 
 5. Create `learn-progress.json` with config reconstructed from existing files
-6. Mark these phases as completed (SKIP them):
+6. Mark these phases as already done (SKIP them — do NOT re-run):
    - `discovery` — already configured
    - `settings` — already in settings.json
    - `claude_md_draft` — already exists
-   - `conventions` — already learned, preserved from existing guidelines.md
+   - `conventions` — preserved from existing guidelines.md
    - `safety` — hooks already installed
-   - `dependencies` — rarely changes, skip for speed
-7. **Jump directly to Phase 4 (Scanning)** — then Phase 5 (Registry), Phase 6 (Duplicates), Phase 10 (Skills/Architecture), Phase 11 (CLAUDE.md), Phase 12 (Summary)
+   - `dependencies` — skip for speed
+7. **Now execute these phases in order (DO NOT SKIP THESE):**
+   - **Phase 4** — Deep Codebase Scan (re-scan all code)
+   - **Phase 5** — Build Registry (rebuild from scan results)
+   - **Phase 6** — Detect Duplicates (re-check with new registry)
+   - **Phase 10** — Skills & Architecture (update module docs)
+   - **Phase 11** — Finalize CLAUDE.md (rewrite with fresh data)
+   - **Phase 12** — Summary (report what changed)
 
-This means Refresh Mode only runs: **Scan → Registry → Duplicates → Skills/Architecture → CLAUDE.md → Summary**. Everything else is preserved.
-
-**If NONE of the above — this is a fresh start. Begin from Phase 1.**
+### Mode C: FRESH INSTALL (none of the above)
+Begin from Phase 1.
 
 ### Progress File Format
 
@@ -81,23 +84,23 @@ After completing each phase, update `.claude/learn-progress.json`:
 
 ```json
 {
-    "started_at": "ISO 8601 timestamp",
-    "last_updated": "ISO 8601 timestamp",
-    "completed_phases": ["discovery", "settings", "claude_md_draft"],
-    "current_phase": "scanning",
-    "current_phase_progress": "scanned 30/127 files, built partial registry",
-    "user_config": {
-        "project_name": "...",
-        "project_description": "...",
-        "framework": "...",
-        "language": "...",
-        "project_type": "...",
-        "permission_level": "...",
-        "features": {},
-        "git_platform": "...",
-        "domain_rules": [],
-        "notes": ""
-    }
+   "started_at": "ISO 8601 timestamp",
+   "last_updated": "ISO 8601 timestamp",
+   "completed_phases": ["discovery", "settings", "claude_md_draft"],
+   "current_phase": "scanning",
+   "current_phase_progress": "scanned 30/127 files, built partial registry",
+   "user_config": {
+      "project_name": "...",
+      "project_description": "...",
+      "framework": "...",
+      "language": "...",
+      "project_type": "...",
+      "permission_level": "...",
+      "features": {},
+      "git_platform": "...",
+      "domain_rules": [],
+      "notes": ""
+   }
 }
 ```
 
@@ -168,7 +171,7 @@ Present your findings and ask everything at once:
 >    8. Plans & Tickets — development planning
 >    9. Testing — test enforcement (framework-specific)
 >    10. Agent Pipeline — autonomous plan/develop/review agents for tickets
->    Default: **1, 2, 3, 4, 5**
+         >    Default: **1, 2, 3, 4, 5**
 >
 > **4. Git platform?** GitLab / GitHub / Both / None
 
@@ -254,27 +257,27 @@ Add `permission_level` and `git_platform` fields:
 - **standard**:
 ```json
 {
-  "permission_level": "standard",
-  "git_platform": "{github/gitlab/none}",
-  "permissions": {
-    "defaultMode": "ask",
-    "allow": ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)"]
-  }
+   "permission_level": "standard",
+   "git_platform": "{github/gitlab/none}",
+   "permissions": {
+      "defaultMode": "ask",
+      "allow": ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)"]
+   }
 }
 ```
 
 - **autonomous**:
 ```json
 {
-  "permission_level": "autonomous",
-  "git_platform": "{github/gitlab/none}",
-  "permissions": {
-    "defaultMode": "ask",
-    "allow": [
-      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)",
-      "Bash(git branch:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)"
-    ]
-  }
+   "permission_level": "autonomous",
+   "git_platform": "{github/gitlab/none}",
+   "permissions": {
+      "defaultMode": "ask",
+      "allow": [
+         "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)",
+         "Bash(git branch:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)"
+      ]
+   }
 }
 ```
 
@@ -427,14 +430,14 @@ If creating new:
 
 ```json
 {
-    "scanned_at": "{ISO 8601 timestamp}",
-    "scanned_by": "learn",
-    "stack": "{language}/{framework}",
-    "stats": {
-        "total": 0,
-        "by_type": {}
-    },
-    "entries": {}
+   "scanned_at": "{ISO 8601 timestamp}",
+   "scanned_by": "learn",
+   "stack": "{language}/{framework}",
+   "stats": {
+      "total": 0,
+      "by_type": {}
+   },
+   "entries": {}
 }
 ```
 
@@ -442,33 +445,33 @@ If creating new:
 
 ```json
 "entries": {
-    "InvoiceService": {
-        "file": "app/Services/InvoiceService.php",
-        "type": "service",
-        "purpose": "Handles invoice creation, calculation, and payment status",
-        "tags": ["billing", "invoices", "payments"],
-        "public_methods": ["create", "calculateTotal", "markAsPaid"],
-        "depends_on": ["InvoiceRepository", "TaxCalculator"],
-        "language": "php"
-    },
-    "useAuth": {
-        "file": "src/hooks/useAuth.ts",
-        "type": "hook",
-        "purpose": "Authentication state management and login/logout",
-        "tags": ["auth", "hooks", "state"],
-        "exports": ["useAuth", "AuthProvider"],
-        "depends_on": ["AuthContext", "api/auth"],
-        "language": "typescript"
-    },
-    "UserViewSet": {
-        "file": "api/views/user.py",
-        "type": "view",
-        "purpose": "REST API endpoints for user CRUD operations",
-        "tags": ["users", "api", "rest"],
-        "public_methods": ["list", "create", "retrieve", "update", "destroy"],
-        "depends_on": ["UserSerializer", "UserModel"],
-        "language": "python"
-    }
+"InvoiceService": {
+"file": "app/Services/InvoiceService.php",
+"type": "service",
+"purpose": "Handles invoice creation, calculation, and payment status",
+"tags": ["billing", "invoices", "payments"],
+"public_methods": ["create", "calculateTotal", "markAsPaid"],
+"depends_on": ["InvoiceRepository", "TaxCalculator"],
+"language": "php"
+},
+"useAuth": {
+"file": "src/hooks/useAuth.ts",
+"type": "hook",
+"purpose": "Authentication state management and login/logout",
+"tags": ["auth", "hooks", "state"],
+"exports": ["useAuth", "AuthProvider"],
+"depends_on": ["AuthContext", "api/auth"],
+"language": "typescript"
+},
+"UserViewSet": {
+"file": "api/views/user.py",
+"type": "view",
+"purpose": "REST API endpoints for user CRUD operations",
+"tags": ["users", "api", "rest"],
+"public_methods": ["list", "create", "retrieve", "update", "destroy"],
+"depends_on": ["UserSerializer", "UserModel"],
+"language": "python"
+}
 }
 ```
 
@@ -533,13 +536,13 @@ Add a `duplicates` section to registry.json:
 
 ```json
 "duplicates": [
-    {
-        "a": "App\\Helpers\\formatAmount()",
-        "b": "App\\Services\\MoneyFormatter::format()",
-        "similarity": "high",
-        "reason": "Both format monetary values with currency symbols",
-        "suggestion": "Consolidate into MoneyFormatter::format() — more complete implementation"
-    }
+{
+"a": "App\\Helpers\\formatAmount()",
+"b": "App\\Services\\MoneyFormatter::format()",
+"similarity": "high",
+"reason": "Both format monetary values with currency symbols",
+"suggestion": "Consolidate into MoneyFormatter::format() — more complete implementation"
+}
 ]
 ```
 
@@ -737,14 +740,14 @@ Read `.claude/settings.json`, merge (don't overwrite) the hooks section:
 
 ```json
 {
-    "hooks": {
-        "PreToolUse": [
-            {
-                "type": "command",
-                "command": ".claude/hooks/preToolUse.sh"
-            }
-        ]
-    }
+   "hooks": {
+      "PreToolUse": [
+         {
+            "type": "command",
+            "command": ".claude/hooks/preToolUse.sh"
+         }
+      ]
+   }
 }
 ```
 
@@ -768,12 +771,12 @@ Add to registry.json:
 
 ```json
 "dependency_graph": {
-    "InvoiceService": {
-        "depends_on": ["InvoiceRepository", "TaxCalculator", "EventDispatcher"],
-        "depended_by": ["InvoiceController", "BillingJob"],
-        "import_count": 3,
-        "risk": "high"
-    }
+"InvoiceService": {
+"depends_on": ["InvoiceRepository", "TaxCalculator", "EventDispatcher"],
+"depended_by": ["InvoiceController", "BillingJob"],
+"import_count": 3,
+"risk": "high"
+}
 }
 ```
 
