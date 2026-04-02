@@ -55,7 +55,7 @@ When Claude reads `learn.md`, it runs a **12-step interactive setup**:
 
 If interrupted at any point, just say "continue" or re-paste learn.md. Claude reads `learn-progress.json` and picks up exactly where it left off.
 
-**Already set up?** Just run the same command again. Claude detects your existing setup, skips all questions, and re-scans your codebase in **Refresh Mode** — updating the registry, architecture, guidelines, skills, and CLAUDE.md.
+**Already set up?** Just run the same command again. Claude enters **Refresh Mode** — no questions, no setup, just re-scans and updates.
 
 ---
 
@@ -111,9 +111,7 @@ When your codebase changes significantly:
 claude "Read .claude/init/learn.md and execute every task in it"
 ```
 
-Claude detects your existing setup and enters **Refresh Mode** — it skips all setup questions, re-scans your codebase, and updates the registry, architecture, guidelines, skills, and CLAUDE.md. Your settings and permissions are preserved. No need to answer anything again.
-
-If you want to change settings (permissions, features, etc.), just say "yes" when Claude asks if you want to reconfigure.
+Claude detects your existing setup and enters **Refresh Mode** automatically — no questions, no confirmation. It skips setup, conventions, safety hooks, and dependencies (already done), and only re-runs what matters: **scan → registry → duplicates → skills/architecture → CLAUDE.md**. Fast and silent.
 
 ### Laravel: After Package Upgrade
 
