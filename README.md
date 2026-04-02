@@ -75,10 +75,9 @@ your-project/
 │   ├── skills/                      <- Module documentation
 │   ├── decisions/                   <- Architectural decision records
 │   ├── plans/                       <- Implementation plans
-│   ├── hooks/                       <- Safety, convention & model routing hooks
+│   ├── hooks/                       <- Safety & convention hooks
 │   │   ├── preToolUse.sh
-│   │   ├── postToolUse.sh
-│   │   └── modelRouter.sh
+│   │   └── postToolUse.sh
 │   └── logs/                        <- Guard logs (gitignored)
 ```
 
@@ -156,6 +155,34 @@ CLAUDE.md instructs Claude to keep everything updated:
 - **Major feature lands** -> Claude updates CLAUDE.md
 
 You don't maintain these files manually. Claude does it during normal development.
+
+---
+
+## Why Claude Boost?
+
+Most approaches to enhancing Claude Code rely on plugins, background services, or additional AI calls to give Claude context about your codebase. This introduces overhead that works against you:
+
+- **Extra token consumption** — AI-powered compression and summarization tools make additional API calls on every session, tool use, or prompt. Those tokens add up fast, especially on large projects.
+- **Runtime dependencies** — background daemons, vector databases, and additional runtimes add infrastructure overhead for what should be a zero-friction experience.
+- **Plugin system lock-in** — if the plugin API changes or your environment doesn't support it, the tool breaks. Your project context shouldn't depend on a third-party lifecycle.
+- **Lossy context** — AI-generated summaries lose detail. A compressed memory of your codebase is never as useful as a structured, complete registry.
+
+### The Claude Boost Approach
+
+Claude already knows how to read files — it does it extremely well. Instead of building middleware that summarizes your code *for* Claude, Claude Boost lets Claude read structured context directly:
+
+| | Plugin-Based Approach | Claude Boost |
+|--|----------------------|--------------|
+| **Architecture** | Background services, vector DBs, AI compression | Plain files — JSON, Markdown, YAML |
+| **Token cost** | Extra API calls per session/action | Zero additional tokens — Claude reads local files |
+| **Dependencies** | Additional runtimes, databases, HTTP servers | None — just Claude CLI |
+| **Context quality** | AI-generated summaries (lossy) | Structured registry — every class, function, route cataloged |
+| **Portability** | Tied to plugin system | Drop a folder into any project, done |
+| **Transparency** | Compressed context you can't easily inspect | Human-readable files you can review and version-control |
+
+A registry, guidelines, decision logs, and skills — all in plain files that cost zero extra tokens, survive across every session, and work with any language.
+
+The best tools work *with* the system, not around it.
 
 ---
 
