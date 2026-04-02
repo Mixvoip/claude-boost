@@ -171,8 +171,8 @@ Most approaches to enhancing Claude Code rely on plugins, background services, o
 
 Claude already knows how to read files — it does it extremely well. Instead of building middleware that summarizes your code *for* Claude, Claude Boost lets Claude read structured context directly:
 
-| | Plugin-Based Approach | Claude Boost |
-|--|----------------------|--------------|
+| Aspect | Plugin-Based Approach | Claude Boost |
+|--------|----------------------|--------------|
 | **Architecture** | Background services, vector DBs, AI compression | Plain files — JSON, Markdown, YAML |
 | **Token cost** | Extra API calls per session/action | Zero additional tokens — Claude reads local files |
 | **Dependencies** | Additional runtimes, databases, HTTP servers | None — just Claude CLI |
