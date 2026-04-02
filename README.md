@@ -1,5 +1,6 @@
 # Claude Boost
 
+[![GitHub release](https://img.shields.io/github/v/tag/ualimxvp/claude-boost?label=release)](https://github.com/ualimxvp/claude-boost/releases)
 [![Sponsored by Mixvoip](https://img.shields.io/badge/sponsored%20by-Mixvoip-blue)](https://www.mixvoip.com)
 [![Made in Luxembourg](https://img.shields.io/badge/made%20in-Luxembourg%20%F0%9F%87%B1%F0%9F%87%BA-red)]()
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -11,10 +12,14 @@ Drop one folder into any project — PHP, JavaScript, Python, Go, Rust, Ruby, Ja
 ## Install (Any Project)
 
 ```bash
+# Clone Claude Boost
+git clone https://github.com/ualimxvp/claude-boost.git
+
 # Copy the init folder into your project
-cp -r .claude/init your-project/.claude/init
+cp -r claude-boost/.claude/init your-project/.claude/init
 
 # Let Claude learn your codebase
+cd your-project
 claude "Read .claude/init/learn.md and execute every task in it"
 ```
 
@@ -23,7 +28,7 @@ That's it. Claude handles everything interactively.
 ### Laravel Projects
 
 ```bash
-composer require codewithali/claude-boost
+composer require ualimxvp/claude-boost
 php artisan claude:init
 claude "Read .claude/init/learn.md and execute every task in it"
 ```
@@ -109,7 +114,7 @@ Claude re-reads the code, updates the registry, skills, and CLAUDE.md. It incorp
 ### Laravel: After Package Upgrade
 
 ```bash
-composer update codewithali/claude-boost
+composer update ualimxvp/claude-boost
 php artisan claude:update
 ```
 
@@ -158,6 +163,50 @@ You don't maintain these files manually. Claude does it during normal developmen
 
 ---
 
+## Publishing Your `.claude` Folder
+
+Once Claude Boost has learned your project, you can publish the generated `.claude` folder so your entire team benefits — every developer gets the same registry, conventions, safety hooks, and project brain from the first session.
+
+### Commit to Your Project
+
+The simplest approach — just commit the `.claude` folder to your project repo:
+
+```bash
+git add .claude/
+git commit -m "Add Claude Boost project context"
+git push
+```
+
+Sensitive files like `learn-progress.json`, `settings.local.json`, and `logs/` are already gitignored. Everything else — registry, guidelines, skills, hooks, decisions, and CLAUDE.md — is safe and meant to be shared.
+
+### What Gets Published
+
+| File | Shared? | Why |
+|------|---------|-----|
+| `CLAUDE.md` | Yes | Project brain — every developer's Claude reads this |
+| `registry.json` | Yes | Codebase catalog — prevents duplicate code |
+| `guard-rules.yaml` | Yes | Safety rules — same protection for everyone |
+| `guidelines.md` | Yes | Conventions — consistent code style |
+| `skills/` | Yes | Module docs — shared knowledge |
+| `decisions/` | Yes | Architecture decisions — no revisiting settled choices |
+| `hooks/` | Yes | Safety & convention hooks — team-wide guardrails |
+| `settings.json` | Yes | Hook registration — auto-activates for the team |
+| `learn-progress.json` | No | Gitignored — per-user tracking |
+| `settings.local.json` | No | Gitignored — per-user permissions |
+| `logs/` | No | Gitignored — per-user guard logs |
+
+### Team Workflow
+
+1. One developer runs Claude Boost to learn the project
+2. Commit the `.claude` folder to the repo
+3. Every team member gets the full context on `git pull`
+4. Claude reads CLAUDE.md automatically — no setup needed for new developers
+5. When the codebase evolves, re-run the learning step and commit the updates
+
+This turns Claude from a generic assistant into a team-wide senior developer who knows your entire codebase — and stays in sync.
+
+---
+
 ## Why Claude Boost?
 
 Most approaches to enhancing Claude Code rely on plugins, background services, or additional AI calls to give Claude context about your codebase. This introduces overhead that works against you:
@@ -196,6 +245,10 @@ The best tools work *with* the system, not around it.
 
 Built in partnership with [Mixvoip](https://www.mixvoip.com). Thanks for supporting open-source development.
 
+## Contributing
+
+Found a bug or have an idea? [Open an issue](https://github.com/ualimxvp/claude-boost/issues) or submit a pull request.
+
 ## License
 
 [MIT License](LICENSE)
@@ -203,3 +256,5 @@ Built in partnership with [Mixvoip](https://www.mixvoip.com). Thanks for support
 ---
 
 **One file. Zero commands. Makes Claude smart about your codebase.**
+
+[GitHub](https://github.com/ualimxvp/claude-boost) | [Packagist](https://packagist.org/packages/ualimxvp/claude-boost) | [Mixvoip](https://www.mixvoip.com)

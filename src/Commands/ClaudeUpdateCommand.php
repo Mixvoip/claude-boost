@@ -118,7 +118,7 @@ class ClaudeUpdateCommand extends Command
             $lock = json_decode(File::get($composerLock), true);
             $packages = array_merge($lock['packages'] ?? [], $lock['packages-dev'] ?? []);
             foreach ($packages as $package) {
-                if (($package['name'] ?? '') === 'codewithali/claude-boost') {
+                if (($package['name'] ?? '') === 'ualimxvp/claude-boost') {
                     return $package['version'] ?? 'dev';
                 }
             }

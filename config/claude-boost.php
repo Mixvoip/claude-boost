@@ -17,6 +17,6 @@ return [
     */
 
     // Package name (used by update command to find version in composer.lock)
-    'package_name' => 'codewithali/claude-boost',
+    'package_name' => 'ualimxvp/claude-boost',
 
 ];
