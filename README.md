@@ -39,7 +39,7 @@ claude "Read .claude/init/learn.md and execute every task in it"
 
 When Claude reads `learn.md`, it runs a **12-step interactive setup**:
 
-0. **Checks for previous progress** — resumes if interrupted
+0. **Checks for previous progress** — resumes if interrupted, or enters **Refresh Mode** if already set up
 1. **Discovers your stack** — languages, frameworks, databases, testing tools
 2. **Asks you questions** — permission level, features to enable
 3. **Drafts CLAUDE.md early** — safety net in case of interruption
@@ -54,6 +54,8 @@ When Claude reads `learn.md`, it runs a **12-step interactive setup**:
 12. **Final summary** — reports what was created and next steps
 
 If interrupted at any point, just say "continue" or re-paste learn.md. Claude reads `learn-progress.json` and picks up exactly where it left off.
+
+**Already set up?** Just run the same command again. Claude detects your existing setup, skips all questions, and re-scans your codebase in **Refresh Mode** — updating the registry, architecture, guidelines, skills, and CLAUDE.md.
 
 ---
 
@@ -109,7 +111,9 @@ When your codebase changes significantly:
 claude "Read .claude/init/learn.md and execute every task in it"
 ```
 
-Claude re-reads the code, updates the registry, skills, and CLAUDE.md. It incorporates existing knowledge — nothing is lost.
+Claude detects your existing setup and enters **Refresh Mode** — it skips all setup questions, re-scans your codebase, and updates the registry, architecture, guidelines, skills, and CLAUDE.md. Your settings and permissions are preserved. No need to answer anything again.
+
+If you want to change settings (permissions, features, etc.), just say "yes" when Claude asks if you want to reconfigure.
 
 ### Laravel: After Package Upgrade
 
@@ -118,7 +122,7 @@ composer update ualimxvp/claude-boost
 php artisan claude:update
 ```
 
-This refreshes learn.md, hooks, and templates to the latest version. Your registry, CLAUDE.md, guidelines, architecture, and skills are preserved.
+This refreshes learn.md, hooks, and templates to the latest version. Then run the learn command above — Claude will use Refresh Mode automatically.
 
 ---
 

@@ -38,7 +38,41 @@ Before doing anything, check if `.claude/learn-progress.json` exists.
 5. Tell the user: "I see we were interrupted during {current_phase}. Picking up where we left off."
 6. Jump directly to the incomplete phase
 
-**If it DOES NOT exist — this is a fresh start. Begin from Phase 1.**
+**If it DOES NOT exist — check for REFRESH mode:**
+
+Check if `.claude/settings.json` exists AND has a `permission_level` field AND `CLAUDE.md` exists in the project root. If ALL three are true, this project was already set up — enter **Refresh Mode**.
+
+### Refresh Mode
+
+This mode re-scans the codebase and updates all intelligence files without re-asking setup questions.
+
+1. Read `.claude/settings.json` to get `permission_level`, `git_platform`, and `permissions`
+2. Read `CLAUDE.md` to extract the project name, description, and stack
+3. Read `.claude/guidelines.md` if it exists (to preserve conventions)
+4. Tell the user:
+
+> **Refresh mode — existing setup detected.**
+>
+> | Setting | Value |
+> |---------|-------|
+> | Project | {name from CLAUDE.md} |
+> | Stack | {stack from CLAUDE.md} |
+> | Permissions | {permission_level from settings.json} |
+> | Git Platform | {git_platform from settings.json} |
+>
+> I'll re-scan your codebase and update the registry, architecture, guidelines, skills, and CLAUDE.md.
+> Your settings and permissions are preserved.
+>
+> **Want to change any settings before I scan?** (yes to reconfigure / no to proceed)
+
+5. If the user says **no** (or just wants to proceed):
+   - Create `learn-progress.json` with config reconstructed from existing files
+   - Mark phases `discovery`, `settings`, and `claude_md_draft` as completed
+   - **Jump directly to Phase 4 (Scanning)**
+
+6. If the user says **yes** — fall through to Phase 1 (fresh start) so they can reconfigure
+
+**If NONE of the above — this is a fresh start. Begin from Phase 1.**
 
 ### Progress File Format
 
