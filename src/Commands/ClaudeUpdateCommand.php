@@ -96,6 +96,31 @@ class ClaudeUpdateCommand extends Command
             }
         });
 
+        // ── Patch hook settings (ensure timeout is set) ────────────────
+        $this->components->task('Patching hook settings', function () {
+            $settingsPath = base_path('.claude/settings.json');
+            if (!File::exists($settingsPath)) {
+                return;
+            }
+
+            $settings = json_decode(File::get($settingsPath), true) ?? [];
+            $hookMap = [
+                'PreToolUse' => '.claude/hooks/preToolUse.sh',
+            ];
+
+            foreach ($hookMap as $hookType => $command) {
+                $existing = $settings['hooks'][$hookType] ?? [];
+                foreach ($existing as $i => $hook) {
+                    if (($hook['command'] ?? '') === $command) {
+                        $existing[$i]['timeout'] = 30;
+                    }
+                }
+                $settings['hooks'][$hookType] = $existing;
+            }
+
+            File::put($settingsPath, json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        });
+
         // ── Summary ─────────────────────────────────────────────────────
         $this->newLine();
         $this->components->info('Update complete!');

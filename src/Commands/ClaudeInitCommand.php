@@ -208,19 +208,20 @@ class ClaudeInitCommand extends Command
                 $filtered[] = $newHook;
                 $settings['hooks'][$hookType] = array_values($filtered);
             } else {
-                // Merge — add only if not already registered
+                // Merge — add if not registered, or update if outdated
                 $existing = $settings['hooks'][$hookType] ?? [];
-                $alreadyRegistered = false;
-                foreach ($existing as $hook) {
+                $found = false;
+                foreach ($existing as $i => $hook) {
                     if (($hook['command'] ?? '') === $command) {
-                        $alreadyRegistered = true;
+                        $existing[$i] = $newHook;
+                        $found = true;
                         break;
                     }
                 }
-                if (!$alreadyRegistered) {
+                if (!$found) {
                     $existing[] = $newHook;
-                    $settings['hooks'][$hookType] = $existing;
                 }
+                $settings['hooks'][$hookType] = $existing;
             }
         }
 
