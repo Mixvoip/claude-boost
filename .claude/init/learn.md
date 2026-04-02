@@ -132,6 +132,7 @@ Present your findings and ask everything at once:
 >    7. Git Standards — branch naming, commit format, MR templates
 >    8. Plans & Tickets — development planning
 >    9. Testing — test enforcement (framework-specific)
+>    10. Agent Pipeline — autonomous plan/develop/review agents for tickets
 >    Default: **1, 2, 3, 4, 5**
 >
 > **4. Git platform?** GitLab / GitHub / Both / None
@@ -205,17 +206,21 @@ Check if `.claude/` contains any worktree directories (e.g. `.claude/worktrees/`
 
 If the file already exists, READ IT FIRST and **merge** — don't overwrite.
 
-Add a `permission_level` field so the safety hook can read it:
+Add `permission_level` and `git_platform` fields:
+
+- `permission_level` — used by the safety hook
+- `git_platform` — used by the agent pipeline (plan/develop/review agents)
 
 - **strict**:
 ```json
-{ "permission_level": "strict", "permissions": { "defaultMode": "ask", "allow": [] } }
+{ "permission_level": "strict", "git_platform": "{github/gitlab/none}", "permissions": { "defaultMode": "ask", "allow": [] } }
 ```
 
 - **standard**:
 ```json
 {
   "permission_level": "standard",
+  "git_platform": "{github/gitlab/none}",
   "permissions": {
     "defaultMode": "ask",
     "allow": ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)"]
@@ -227,6 +232,7 @@ Add a `permission_level` field so the safety hook can read it:
 ```json
 {
   "permission_level": "autonomous",
+  "git_platform": "{github/gitlab/none}",
   "permissions": {
     "defaultMode": "ask",
     "allow": [
@@ -239,7 +245,7 @@ Add a `permission_level` field so the safety hook can read it:
 
 - **bypass_all**:
 ```json
-{ "permission_level": "bypass_all", "permissions": { "defaultMode": "bypassPermissions" } }
+{ "permission_level": "bypass_all", "git_platform": "{github/gitlab/none}", "permissions": { "defaultMode": "bypassPermissions" } }
 ```
 
 **IMPORTANT:** Preserve existing `model` field and existing `allow` entries. MERGE, never remove.

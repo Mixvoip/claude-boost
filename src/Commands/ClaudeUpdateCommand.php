@@ -35,6 +35,30 @@ class ClaudeUpdateCommand extends Command
             }
         });
 
+        // ── Update unload.md to latest ─────────────────────────────────
+        $this->components->task('Updating unload.md', function () {
+            $source = __DIR__ . '/../../.claude/init/unload.md';
+            $target = base_path('.claude/init/unload.md');
+
+            if (File::exists($source)) {
+                File::ensureDirectoryExists(dirname($target));
+                File::copy($source, $target);
+            }
+        });
+
+        // ── Update agent pipeline to latest ────────────────────────────
+        $this->components->task('Updating agent pipeline', function () {
+            $agents = ['develop.md', 'review.md', 'plan.md', 'AGENTS.md'];
+            foreach ($agents as $agent) {
+                $source = __DIR__ . "/../../.claude/init/{$agent}";
+                $target = base_path(".claude/init/{$agent}");
+                if (File::exists($source)) {
+                    File::ensureDirectoryExists(dirname($target));
+                    File::copy($source, $target);
+                }
+            }
+        });
+
         // ── Update guard rules reference ────────────────────────────────
         $this->components->task('Updating guard rules reference', function () {
             $source = __DIR__ . '/../../.claude/init/guard-rules.md';

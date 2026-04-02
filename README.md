@@ -69,9 +69,14 @@ your-project/
 │   ├── architecture.md              <- Module map, data flow (read on-demand)
 │   ├── guidelines.md                <- Conventions learned from your code
 │   ├── learn-progress.json          <- Resume tracker (gitignored)
-│   ├── init/                        <- The learning prompts
-│   │   ├── learn.md
+│   ├── init/                        <- The learning prompts & agents
+│   │   ├── learn.md                <- Codebase learning (the core product)
+│   │   ├── unload.md               <- Clean uninstall guide
 │   │   ├── guard-rules.md
+│   │   ├── plan.md                 <- Ticket planner agent
+│   │   ├── develop.md              <- Autonomous developer agent
+│   │   ├── review.md               <- Autonomous reviewer agent
+│   │   ├── AGENTS.md               <- Agent pipeline guide
 │   │   └── templates/
 │   │       └── skill.md
 │   ├── guidelines/                  <- Git standards and other guides
@@ -117,6 +122,26 @@ This refreshes learn.md, hooks, and templates to the latest version. Your regist
 
 ---
 
+## Uninstalling
+
+To cleanly remove Claude Boost from your project:
+
+```bash
+claude "Read .claude/init/unload.md and execute every task in it"
+```
+
+Claude will:
+1. Inventory all Claude Boost files and classify them (ours vs yours)
+2. Ask what you'd like to keep (registry, architecture, skills, etc.)
+3. Back up everything before making changes
+4. Restore your pre-boost CLAUDE.md and settings.json from git history
+5. Remove only Claude Boost artifacts
+6. Show you the full diff to review before you commit
+
+For Laravel projects, also run `composer remove ualimxvp/claude-boost` after.
+
+---
+
 ## Laravel Commands
 
 The Composer package provides three commands:
@@ -142,6 +167,57 @@ Guard hook (`preToolUse.sh`) blocks destructive commands in real-time:
 - Production migrations, `curl | bash`
 
 The hook is pure bash — no PHP runtime needed. Works for any language.
+
+---
+
+## Agent Pipeline — Plan, Develop, Review
+
+Claude Boost includes 3 autonomous agents that turn your ticket workflow into a CI/CD-like pipeline:
+
+```
+You + Planner ──> Developer ──> Reviewer ──> You merge
+```
+
+| Agent | What It Does | Mode |
+|-------|-------------|------|
+| **Planner** (`plan.md`) | Interviews you, scans codebase, creates structured tickets | Interactive |
+| **Developer** (`develop.md`) | Picks up tickets, plans, uses parallel sub-agents, opens PRs/MRs | Autonomous |
+| **Reviewer** (`review.md`) | 3 parallel specialist reviews (quality + tests + security), approve or return | Autonomous |
+
+### Quick Start
+
+```bash
+# Tab 1 — Plan tickets with Claude
+claude "Read .claude/init/plan.md and execute it"
+
+# Tab 2 — Claude develops autonomously
+claude "Read .claude/init/develop.md and execute it"
+
+# Tab 3 — Claude reviews autonomously
+claude "Read .claude/init/review.md and execute it"
+```
+
+### Connecting Your Ticket Tool
+
+The agents need a CLI tool to create tickets and manage PRs/MRs:
+
+| Platform | CLI | Setup |
+|----------|-----|-------|
+| **GitHub** | `gh` | `brew install gh && gh auth login` |
+| **GitLab** | `glab` | `brew install glab && glab auth login` |
+| **Linear** | Linear MCP | Add via Claude Code MCP settings |
+| **Jira** | Jira MCP | Add via Claude Code MCP settings |
+
+The agents auto-detect your platform from `.claude/settings.json` or directory structure (`.github/` vs `.gitlab-ci.yml`).
+
+### How It Works for Teams
+
+1. **You + Planner** discuss the feature → Planner creates a structured ticket with file paths, acceptance criteria, and test plan
+2. **Developer** picks up the ticket → breaks it into sub-tasks → launches parallel agents → opens PR/MR
+3. **Reviewer** picks up the PR/MR → dispatches 3 specialist reviewers → approves or returns with specific fixes
+4. **You merge** — the boring part is automated
+
+Returned tickets go back to the Developer (max 2 returns, then blocked for human intervention). See `.claude/init/AGENTS.md` for full documentation.
 
 ---
 

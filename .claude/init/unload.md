@@ -25,6 +25,10 @@ If a file is not on this list, **do not touch it**.
 .claude/init/learn.md
 .claude/init/unload.md
 .claude/init/guard-rules.md
+.claude/init/develop.md
+.claude/init/review.md
+.claude/init/plan.md
+.claude/init/AGENTS.md
 .claude/init/templates/skill.md
 .claude/hooks/preToolUse.sh
 .claude/registry.json
@@ -200,11 +204,15 @@ Wait for "yes". Then delete each file individually.
 13. `.claude/init/templates/skill.md`
 14. Remove `.claude/init/templates/` if empty
 15. `.claude/init/guard-rules.md`
-16. `.claude/init/learn.md`
-17. `.claude/init/unload.md`
-18. Remove `.claude/init/` if empty
-19. Remove `.claude/plans/` ONLY if empty
-20. Remove `.claude/` ONLY if completely empty
+16. `.claude/init/develop.md`
+17. `.claude/init/review.md`
+18. `.claude/init/plan.md`
+19. `.claude/init/AGENTS.md`
+20. `.claude/init/learn.md`
+21. `.claude/init/unload.md`
+22. Remove `.claude/init/` if empty
+23. Remove `.claude/plans/` ONLY if empty
+24. Remove `.claude/` ONLY if completely empty
 
 **For "remove directory if empty":** First list the directory contents. If ANY files remain, do NOT remove it.
 

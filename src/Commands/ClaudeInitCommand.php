@@ -81,6 +81,28 @@ class ClaudeInitCommand extends Command
             }
         });
 
+        // ── Copy unload.md ──────────────────────────────────────────────
+        $this->components->task('Installing unload.md', function () {
+            $source = __DIR__ . '/../../.claude/init/unload.md';
+            $target = base_path('.claude/init/unload.md');
+
+            if (File::exists($source)) {
+                File::copy($source, $target);
+            }
+        });
+
+        // ── Copy agent pipeline ─────────────────────────────────────────
+        $this->components->task('Installing agent pipeline', function () {
+            $agents = ['develop.md', 'review.md', 'plan.md', 'AGENTS.md'];
+            foreach ($agents as $agent) {
+                $source = __DIR__ . "/../../.claude/init/{$agent}";
+                $target = base_path(".claude/init/{$agent}");
+                if (File::exists($source)) {
+                    File::copy($source, $target);
+                }
+            }
+        });
+
         // ── Copy guard rules ────────────────────────────────────────────
         $this->components->task('Installing guard rules', function () {
             $source = __DIR__ . '/../../.claude/init/guard-rules.md';
@@ -130,7 +152,12 @@ class ClaudeInitCommand extends Command
 
         $this->line('  <fg=gray>Files installed:</>');
         $this->line('    .claude/init/learn.md          — The learning guide (Claude reads this)');
+        $this->line('    .claude/init/unload.md         — Clean uninstall guide');
         $this->line('    .claude/init/guard-rules.md    — Safety rules reference');
+        $this->line('    .claude/init/plan.md           — Ticket planner agent');
+        $this->line('    .claude/init/develop.md        — Autonomous developer agent');
+        $this->line('    .claude/init/review.md         — Autonomous reviewer agent');
+        $this->line('    .claude/init/AGENTS.md         — Agent pipeline guide');
         $this->line('    .claude/init/templates/        — Skill template');
         $this->line('    .claude/hooks/preToolUse.sh    — Safety guard (always active)');
         $this->newLine();
