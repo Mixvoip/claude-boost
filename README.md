@@ -1,5 +1,9 @@
 # Claude Boost
 
+[![Sponsored by Mixvoip](https://img.shields.io/badge/sponsored%20by-Mixvoip-blue)](https://www.mixvoip.com)
+[![Made in Luxembourg](https://img.shields.io/badge/made%20in-Luxembourg%20%F0%9F%87%B1%F0%9F%87%BA-red)]()
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 > One file. Zero commands. Makes Claude smart about your codebase.
 
 Drop one folder into any project — PHP, JavaScript, Python, Go, Rust, Ruby, Java, anything — and Claude becomes a senior developer who knows your entire codebase. It reads your code, builds a registry, detects duplicates, learns your conventions, sets up safety guards, and writes a CLAUDE.md that persists across every session.
