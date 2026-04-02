@@ -13,9 +13,10 @@ No matter what happens, you MUST produce these files before finishing:
    no future Claude session will know anything about this project. If you do nothing else,
    you MUST create this file.
 2. **`.claude/registry.json`** — JSON file (never markdown) cataloging the codebase.
-3. **`.claude/claude-boost.json`** — User's configuration choices.
+3. **`.claude/architecture.md`** — Module map, data flow, key patterns (read on-demand).
+4. **`.claude/guidelines.md`** — Conventions discovered from your code.
 
-If you are running low on context, skip skills/decisions/guidelines but NEVER skip CLAUDE.md.
+If you are running low on context, skip skills/guidelines but NEVER skip CLAUDE.md.
 
 ## CRITICAL — Stay On Task
 
@@ -56,8 +57,6 @@ After completing each phase, update `.claude/learn-progress.json`:
         "framework": "...",
         "language": "...",
         "project_type": "...",
-        "model": "...",
-        "token_strategy": "...",
         "permission_level": "...",
         "features": {},
         "git_platform": "...",
@@ -117,43 +116,25 @@ Present your findings and ask everything at once:
 >    Is my detection correct? Type: Monolith / Microservice / Package / CLI / Other?
 >    Any domain rules I should know? (e.g., "prices always in cents", "all times UTC")
 >
-> **2. Model per task** — Which Claude model for each type of work?
->    Available: **Sonnet** (fast, capable), **Opus** (deep reasoning), **Haiku** (fastest, cheapest)
->
->    | Task Type | Default | Your Choice |
->    |-----------|---------|-------------|
->    | Bug fixes & small changes | Sonnet | ? |
->    | New features & architecture | Opus | ? |
->    | Code review & PR review | Sonnet | ? |
->    | Refactoring | Sonnet | ? |
->    | Tests & test generation | Sonnet | ? |
->    | Documentation & comments | Haiku | ? |
->    | Quick questions & lookups | Haiku | ? |
->
->    Or just pick ONE model for everything: Sonnet / Opus / Haiku
->
-> **3. Token strategy?** Efficient (terse, recommended) / Balanced / Thorough (verbose)
->
-> **4. Permissions** — What can Claude do?
+> **2. Permissions** — What can Claude do?
 >    - **Strict** — Suggestions only, never writes files
 >    - **Standard** — Writes code, human reviews before commit (RECOMMENDED)
 >    - **Autonomous** — Can commit and push (logged)
 >    - **Bypass All** — Full access, only destructive guards remain (DANGEROUS)
 >
-> **5. Features** — Pick by number (e.g., 1,2,3,4,5):
+> **3. Features** — Pick by number (e.g., 1,2,3,4,5):
 >    1. Project Registry — catalog all code, anti-duplication [RECOMMENDED]
 >    2. Duplicate Detection — synonym-aware detection of similar code [RECOMMENDED]
 >    3. Convention Learning — learn YOUR team's patterns from code [RECOMMENDED]
 >    4. Safety Guards — block destructive commands via hooks [RECOMMENDED]
 >    5. Auto Skill Generation — documentation for complex modules
->    6. Decision Log — track architectural choices
->    7. Dependency Mapping — trace who depends on what
->    8. Git Standards — branch naming, commit format, MR templates
->    9. Plans & Tickets — development planning
->    10. Testing — test enforcement (framework-specific)
->    Default: **1, 2, 3, 4, 5, 6**
+>    6. Dependency Mapping — trace who depends on what
+>    7. Git Standards — branch naming, commit format, MR templates
+>    8. Plans & Tickets — development planning
+>    9. Testing — test enforcement (framework-specific)
+>    Default: **1, 2, 3, 4, 5**
 >
-> **6. Git platform?** GitLab / GitHub / Both / None
+> **4. Git platform?** GitLab / GitHub / Both / None
 
 Wait for their answer.
 
@@ -180,8 +161,6 @@ Summarize in a table and ask confirmation:
 > | Project | {name} — {description} |
 > | Stack | {language} / {framework} |
 > | Type | {monolith/microservice/etc.} |
-> | Model | {model} |
-> | Token Strategy | {strategy} |
 > | Permissions | {level} |
 > | Features | {list} |
 > | Git Platform | {platform} |
@@ -208,7 +187,6 @@ Create these directories if they don't exist:
 ```
 .claude/
 .claude/skills/
-.claude/decisions/
 .claude/plans/
 .claude/hooks/
 .claude/logs/
@@ -223,62 +201,21 @@ learn-progress.json
 
 Check if `.claude/` contains any worktree directories (e.g. `.claude/worktrees/`, or any folder matching `*worktree*`). If found, add them to `.gitignore` so they are never committed — worktrees are per-developer and must not be pushed.
 
-### 2.2 Write `.claude/claude-boost.json`
-
-```json
-{
-    "package": "claude-boost",
-    "version": "2.0.0",
-    "initialized_at": "{current ISO 8601 timestamp}",
-    "model": {
-        "default": "{user's fallback choice — sonnet/opus/haiku}",
-        "bug_fix": "{model for bug fixes}",
-        "feature": "{model for new features & architecture}",
-        "review": "{model for code/PR review}",
-        "refactor": "{model for refactoring}",
-        "test": "{model for tests & test generation}",
-        "docs": "{model for documentation}",
-        "lookup": "{model for quick questions}",
-        "token_strategy": "{efficient/balanced/thorough}"
-    },
-    "permission_level": "{strict/standard/autonomous/bypass_all}",
-    "features": {
-        "registry": true/false,
-        "duplicate_detection": true/false,
-        "convention_learning": true/false,
-        "guard_hooks": true/false,
-        "auto_skills": true/false,
-        "decision_log": true/false,
-        "dependency_mapping": true/false,
-        "git_standards": true/false,
-        "plans": true/false,
-        "testing": true/false
-    },
-    "stack": {
-        "language": "{php/javascript/typescript/python/go/rust/ruby/java/etc.}",
-        "framework": "{laravel/symfony/nextjs/django/express/gin/rails/etc.}",
-        "database": "{mysql/postgresql/sqlite/mongodb/etc.}",
-        "testing": "{pest/phpunit/jest/pytest/go-test/etc.}"
-    },
-    "git_platform": "{gitlab/github/both/none}",
-    "domain_rules": ["{rule1}", "{rule2}"]
-}
-```
-
-### 2.3 Update `.claude/settings.json`
+### 2.2 Update `.claude/settings.json`
 
 If the file already exists, READ IT FIRST and **merge** — don't overwrite.
 
-**Permission mappings:**
+Add a `permission_level` field so the safety hook can read it:
 
 - **strict**:
 ```json
-{ "permissions": { "defaultMode": "ask", "allow": [] } }
+{ "permission_level": "strict", "permissions": { "defaultMode": "ask", "allow": [] } }
 ```
 
 - **standard**:
 ```json
 {
+  "permission_level": "standard",
   "permissions": {
     "defaultMode": "ask",
     "allow": ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)"]
@@ -289,6 +226,7 @@ If the file already exists, READ IT FIRST and **merge** — don't overwrite.
 - **autonomous**:
 ```json
 {
+  "permission_level": "autonomous",
   "permissions": {
     "defaultMode": "ask",
     "allow": [
@@ -301,7 +239,7 @@ If the file already exists, READ IT FIRST and **merge** — don't overwrite.
 
 - **bypass_all**:
 ```json
-{ "permissions": { "defaultMode": "bypassPermissions" } }
+{ "permission_level": "bypass_all", "permissions": { "defaultMode": "bypassPermissions" } }
 ```
 
 **IMPORTANT:** Preserve existing `model` field and existing `allow` entries. MERGE, never remove.
@@ -324,36 +262,19 @@ even if the scan fails, gets cancelled, or hits context limits.
 
 {What this project does — from user's description}
 
-## Config
 Stack: {language}/{framework} | Permissions: `{permission_level}`
-Model routing: auto — see `.claude/claude-boost.json` for per-task model mapping.
-
-## Tech Stack
-{Language, framework, database, key tools — from what you detected}
-
-## Domain Rules
-{Rules the user provided, or "None specified yet"}
-
-## Architecture
-{Will be filled after codebase scan}
-
-## Key Modules
-{Will be filled after codebase scan}
 
 ## Before Writing Code
 1. Check .claude/registry.json — don't duplicate existing code
-2. Check .claude/decisions/ — follow settled architectural choices
-3. Read .claude/skills/{module}.md before touching a module
+2. Read .claude/architecture.md for module map and data flow
+3. Read .claude/guidelines.md for project conventions
+4. Read .claude/skills/{module}.md before touching a complex module
 
 ## Safety
 Guard hooks active. See .claude/init/guard-rules.md
 
-## After Every Task
-- Update .claude/registry.json if new classes/functions were created
-- Update skill files if a module changed significantly
-
 ## Status
-⚠ Draft — run learn.md to complete the deep scan and fill in real architecture details.
+Draft — run learn.md to complete the deep scan.
 ```
 
 Update progress: add `"claude_md_draft"` to `completed_phases`, set `current_phase` to `"scanning"`
@@ -742,10 +663,10 @@ if [ "$tool_name" = "write" ] || [ "$tool_name" = "edit" ]; then
     esac
 fi
 
-# Permission-level enforcement
+# Permission-level enforcement (reads from settings.json)
 PERM_LEVEL="standard"
-if [ -f "$PROJECT_ROOT/.claude/claude-boost.json" ]; then
-    configured=$(jq -r '.permission_level // "standard"' "$PROJECT_ROOT/.claude/claude-boost.json" 2>/dev/null)
+if [ -f "$PROJECT_ROOT/.claude/settings.json" ]; then
+    configured=$(jq -r '.permission_level // "standard"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null)
     [ -n "$configured" ] && [ "$configured" != "null" ] && PERM_LEVEL="$configured"
 fi
 
@@ -763,158 +684,23 @@ echo '{"decision":"allow"}'
 exit 0
 ```
 
-### 8.2 Create PostToolUse Hook
-
-Create `.claude/hooks/postToolUse.sh`:
-
-```bash
-#!/bin/bash
-set -euo pipefail
-
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.tool_name // ""' 2>/dev/null)
-file_path=$(echo "$input" | jq -r '.tool_input.file_path // .tool_input.path // ""' 2>/dev/null)
-
-# Only check after write/edit operations
-if [ "$tool_name" != "write" ] && [ "$tool_name" != "edit" ]; then
-    exit 0
-fi
-
-# Skip vendor/node_modules/build artifacts
-case "$file_path" in
-    *vendor/*|*node_modules/*|*dist/*|*build/*|*__pycache__/*|*target/*) exit 0 ;;
-esac
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
-LOG_FILE="$PROJECT_ROOT/.claude/logs/convention.log"
-mkdir -p "$(dirname "$LOG_FILE")"
-
-messages=""
-
-# Check registry — remind about anti-duplication
-if [ -f "$PROJECT_ROOT/.claude/registry.json" ]; then
-    messages="Remember: check .claude/registry.json before creating new functions/classes. "
-fi
-
-# Check guidelines exist — remind about conventions
-if [ -f "$PROJECT_ROOT/.claude/guidelines.md" ]; then
-    messages="${messages}Follow conventions in .claude/guidelines.md. "
-fi
-
-if [ -n "$messages" ]; then
-    echo "{\"decision\":\"allow\",\"message\":\"${messages}\"}"
-    exit 0
-fi
-
-exit 0
-```
-
-### 8.3 Create Model Router Hook
-
-Create `.claude/hooks/modelRouter.sh` — this hook runs on every prompt submission and switches the model based on the nature of the task.
-
-Read the user's model preferences from `.claude/claude-boost.json` and map prompt keywords to the right model.
-
-```bash
-#!/bin/bash
-set -euo pipefail
-
-if ! command -v jq &> /dev/null; then
-    exit 0
-fi
-
-input=$(cat)
-prompt=$(echo "$input" | jq -r '.prompt // ""' | tr '[:upper:]' '[:lower:]')
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
-CONFIG="$PROJECT_ROOT/.claude/claude-boost.json"
-
-if [ ! -f "$CONFIG" ]; then
-    exit 0
-fi
-
-# Read model mappings from config
-model_default=$(jq -r '.model.default // "sonnet"' "$CONFIG")
-model_bug_fix=$(jq -r '.model.bug_fix // .model.default // "sonnet"' "$CONFIG")
-model_feature=$(jq -r '.model.feature // .model.default // "sonnet"' "$CONFIG")
-model_review=$(jq -r '.model.review // .model.default // "sonnet"' "$CONFIG")
-model_refactor=$(jq -r '.model.refactor // .model.default // "sonnet"' "$CONFIG")
-model_test=$(jq -r '.model.test // .model.default // "sonnet"' "$CONFIG")
-model_docs=$(jq -r '.model.docs // .model.default // "haiku"' "$CONFIG")
-model_lookup=$(jq -r '.model.lookup // .model.default // "haiku"' "$CONFIG")
-
-# Map model names to model IDs
-resolve_model() {
-    case "$1" in
-        opus)   echo "claude-opus-4-6" ;;
-        haiku)  echo "claude-haiku-4-5-20251001" ;;
-        *)      echo "claude-sonnet-4-6" ;;
-    esac
-}
-
-selected=""
-
-# Match prompt to task type (first match wins)
-if echo "$prompt" | grep -qiE "\b(fix|bug|error|broken|crash|issue|debug|patch|hotfix|failing)\b"; then
-    selected="$model_bug_fix"
-elif echo "$prompt" | grep -qiE "\b(review|pr|merge request|pull request|code review|check this)\b"; then
-    selected="$model_review"
-elif echo "$prompt" | grep -qiE "\b(refactor|restructure|reorganize|clean up|simplify|extract|move)\b"; then
-    selected="$model_refactor"
-elif echo "$prompt" | grep -qiE "\b(test|spec|coverage|unit test|integration test|e2e|assert)\b"; then
-    selected="$model_test"
-elif echo "$prompt" | grep -qiE "\b(doc|document|readme|comment|explain|jsdoc|phpdoc|docblock)\b"; then
-    selected="$model_docs"
-elif echo "$prompt" | grep -qiE "\b(what is|where is|how does|show me|find|search|list|which file|look up)\b"; then
-    selected="$model_lookup"
-elif echo "$prompt" | grep -qiE "\b(feature|implement|create|build|add|new|design|architect)\b"; then
-    selected="$model_feature"
-fi
-
-# Fall back to default if no match
-if [ -z "$selected" ]; then
-    selected="$model_default"
-fi
-
-model_id=$(resolve_model "$selected")
-
-echo "{\"model\":\"$model_id\"}"
-exit 0
-```
-
-### 8.4 Make Hooks Executable
+### 8.2 Make Hook Executable
 
 ```bash
 chmod +x .claude/hooks/preToolUse.sh
-chmod +x .claude/hooks/postToolUse.sh
-chmod +x .claude/hooks/modelRouter.sh
 ```
 
-### 8.5 Register Hooks
+### 8.3 Register Hook
 
 Read `.claude/settings.json`, merge (don't overwrite) the hooks section:
 
 ```json
 {
     "hooks": {
-        "UserPromptSubmit": [
-            {
-                "type": "command",
-                "command": ".claude/hooks/modelRouter.sh"
-            }
-        ],
         "PreToolUse": [
             {
                 "type": "command",
                 "command": ".claude/hooks/preToolUse.sh"
-            }
-        ],
-        "PostToolUse": [
-            {
-                "type": "command",
-                "command": ".claude/hooks/postToolUse.sh"
             }
         ]
     }
@@ -962,7 +748,7 @@ Update progress: add `"dependencies"` to `completed_phases`, set `current_phase`
 
 ---
 
-## Phase 10: Skills & Decisions (If Features Enabled)
+## Phase 10: Skills, Git Standards & Architecture (If Features Enabled)
 
 **Skip if `skills` is in `completed_phases`.**
 
@@ -998,29 +784,7 @@ For each module with 3+ related files, create `.claude/skills/{module-name}.md`:
 - Depended by: {list}
 ```
 
-### 10.2 Log Architectural Decisions (if decision_log enabled)
-
-For significant patterns discovered, create `.claude/decisions/{YYYY-MM-DD}-{topic}.md`:
-
-```markdown
-# Decision: {Title}
-
-**Date**: {YYYY-MM-DD}
-**Status**: Active
-
-## Context
-{Why this decision was needed}
-
-## Decision
-{What was decided}
-
-## Consequences
-{What future code must follow}
-```
-
-Only decisions a new developer or Claude session would need to know.
-
-### 10.3 Git Standards (if git_standards enabled)
+### 10.2 Git Standards (if git_standards enabled)
 
 Create `.claude/guidelines/git.md`:
 
@@ -1051,7 +815,7 @@ Create `.claude/guidelines/git.md`:
 {How to verify}
 ```
 
-### 10.4 Issue Templates (if git_platform is GitLab or GitHub)
+### 10.3 Issue Templates (if git_platform is GitLab or GitHub)
 
 Create issue templates so every ticket has structured information for developers and Claude reviewers.
 
@@ -1164,6 +928,41 @@ labels: bug
 - Claude reviewers rely on acceptance criteria and test plans to validate work
 ```
 
+### 10.4 Create Architecture Documentation (MANDATORY)
+
+Create `.claude/architecture.md` — this contains the detailed project knowledge that would
+otherwise bloat CLAUDE.md. Claude reads this on-demand when exploring or modifying the codebase.
+
+```markdown
+# Architecture
+
+## Overview
+{High-level description — what the system does, how it's structured}
+
+## Tech Stack
+{Language version, framework, database, testing framework, CI — from actual code}
+
+## Module Map
+| Module | Path | Purpose |
+|--------|------|---------|
+| {name} | `{path}` | {what it does} |
+
+## Data Flow
+{How requests/data move through the system — entry point to response}
+
+## Key Patterns
+{Significant architectural patterns discovered during scan — with examples from actual code}
+
+## Entry Points
+{Main entry points into the system}
+
+## Database Schema (Key Tables)
+{Most important tables/collections and their relationships — if applicable}
+```
+
+Fill in ALL sections using knowledge from the codebase scan. This is NOT a template to leave
+blank — populate it with real information.
+
 Update progress: add `"skills"` to `completed_phases`, set `current_phase` to `"claude_md_final"`
 
 ---
@@ -1175,6 +974,10 @@ Update progress: add `"skills"` to `completed_phases`, set `current_phase` to `"
 Now that scanning is complete, **rewrite the draft CLAUDE.md** with real knowledge.
 **Overwrite the same file at the PROJECT ROOT.**
 
+The final CLAUDE.md must be **lean** — it loads into context every single message, so every
+line costs tokens. Detailed information belongs in the on-demand files (.claude/architecture.md,
+.claude/guidelines.md, .claude/skills/).
+
 Final structure:
 
 ```markdown
@@ -1182,59 +985,31 @@ Final structure:
 
 {What this project does — 1-2 sentences}
 
-## Config
-Stack: {language}/{framework} | Permissions: `{permission_level}`
-
-## Model Routing
-Models auto-switch per task via `.claude/hooks/modelRouter.sh`. Config in `.claude/claude-boost.json`.
-
-| Task | Model |
-|------|-------|
-| Bug fixes | {model} |
-| Features & architecture | {model} |
-| Code review | {model} |
-| Refactoring | {model} |
-| Tests | {model} |
-| Docs | {model} |
-| Quick lookups | {model} |
-| Default (no match) | {model} |
-
-## Tech Stack
-{Language version, framework, database, testing, CI — from actual code}
+Stack: {language}/{framework} | DB: {database} | Tests: {test framework}
+Permissions: `{permission_level}`
 
 ## Domain Rules
-{Business rules — things you'd get wrong without knowing}
-
-## Architecture
-{REAL patterns discovered — not generic. How code is organized, how data flows}
-
-## Key Modules
-{Top modules with one-line descriptions — link to .claude/skills/ if exists}
-
-## Conventions
-{Summary of what you found — or reference .claude/guidelines.md}
+{Business rules — things you'd get wrong without knowing. If none, omit this section.}
 
 ## Before Writing Code
 1. Search .claude/registry.json — don't duplicate existing code
-2. Check .claude/decisions/ — follow settled architectural choices
-3. Read .claude/skills/{module}.md before touching a module
-4. If registry has a "duplicates" section — check it first
-
-## Safety
-Guard hooks active. See .claude/init/guard-rules.md
+2. Read .claude/architecture.md for module map and data flow
+3. Read .claude/guidelines.md for project conventions
+4. Read .claude/skills/{module}.md before touching a complex module
 
 ## After Every Task
 - Update .claude/registry.json if you created/removed/renamed classes or functions
-- Update skill files if a module changed significantly
-- Log architectural decisions in .claude/decisions/ when making significant choices
-- Follow conventions in .claude/guidelines.md
+- Update .claude/skills/ if a module changed significantly
+
+## Safety
+Guard hooks active. See .claude/init/guard-rules.md for full list.
 ```
 
 **Rules:**
-- Target 50-80 lines. Every line must earn its place.
+- Target 15-30 lines. Every line must earn its place.
 - Only project-specific knowledge — never generic (no "follow SOLID" etc.)
 - Reference files instead of repeating their content
-- Remove the "⚠ Draft" notice — it's now complete
+- Remove the "Draft" notice — it's now complete
 
 Update progress: add `"claude_md_final"` to `completed_phases`, set `current_phase` to `"summary"`
 
@@ -1247,15 +1022,13 @@ Update progress: add `"claude_md_final"` to `completed_phases`, set `current_pha
 Read back these files and confirm they exist and are valid:
 
 - [ ] `CLAUDE.md` in the **project root** (not inside .claude/)
-- [ ] `.claude/claude-boost.json` with user's config
-- [ ] `.claude/settings.json` with correct permissions
+- [ ] `.claude/settings.json` with correct permissions and permission_level
 - [ ] `.claude/registry.json` as valid JSON with entries
+- [ ] `.claude/architecture.md` with real project knowledge
 - [ ] `.claude/guidelines.md` with conventions (if feature enabled)
 - [ ] `.claude/hooks/preToolUse.sh` executable (if safety enabled)
-- [ ] `.claude/hooks/postToolUse.sh` executable (if safety enabled)
 - [ ] Hook registration in `.claude/settings.json` (if safety enabled)
 - [ ] Skills created for complex modules (if feature enabled)
-- [ ] Decisions logged (if feature enabled)
 
 If any are missing, create them before reporting completion.
 
@@ -1265,15 +1038,14 @@ If any are missing, create them before reporting completion.
 >
 > | File | Status |
 > |------|--------|
-> | `CLAUDE.md` | ✅ Project brain — loaded every session |
-> | `.claude/registry.json` | ✅ {N} entries cataloged |
-> | `.claude/claude-boost.json` | ✅ Your settings saved |
-> | `.claude/guidelines.md` | ✅/⬜ Conventions documented |
-> | `.claude/hooks/` | ✅/⬜ Safety guards installed |
-> | `.claude/skills/` | ✅/⬜ {N} module guides |
-> | `.claude/decisions/` | ✅/⬜ {N} decisions logged |
+> | `CLAUDE.md` | Project essentials — loaded every session (~20 lines) |
+> | `.claude/registry.json` | {N} entries cataloged |
+> | `.claude/architecture.md` | Module map & data flow (read on-demand) |
+> | `.claude/guidelines.md` | Conventions documented (read on-demand) |
+> | `.claude/hooks/` | Safety guards installed |
+> | `.claude/skills/` | {N} module guides (read on-demand) |
 > | Duplicates found | {N} potential (see registry.json) |
-> | Dependencies mapped | ✅/⬜ |
+> | Dependencies mapped | mapped/skipped |
 >
 > **Every future Claude session will automatically know your project.**
 >
@@ -1294,16 +1066,11 @@ from CLAUDE.md's "Before Writing Code" and "After Every Task" sections.
 1. Search `.claude/registry.json` for existing similar functions/classes
 2. Check the `duplicates` section — is something similar already flagged?
 3. If the user asks to create something that already exists, TELL THEM
-4. Check `.claude/decisions/` for prior decisions on this topic
 
 ### After Writing/Editing Any File
 1. Does it match conventions in `.claude/guidelines.md`?
 2. If it doesn't, fix it or ask the user
 3. Update `.claude/registry.json` if you added/removed/renamed classes or functions
-
-### When Making Architectural Decisions
-1. Check `.claude/decisions/` for prior decisions
-2. If making a new decision, log it: `.claude/decisions/{YYYY-MM-DD}-{topic}.md`
 
 ### When Modifying High-Impact Files
 1. Check dependency graph in registry.json (if mapped)
@@ -1322,8 +1089,9 @@ from CLAUDE.md's "Before Writing Code" and "After Every Task" sections.
 
 - **ASK the user and wait for answers** — never assume defaults silently
 - **CLAUDE.md MUST be created in the project root** — draft in Phase 3, final in Phase 11
+- **CLAUDE.md must be lean** — 15-30 lines, details go in .claude/architecture.md and .claude/guidelines.md
 - **Registry is JSON** (`.claude/registry.json`) — NEVER create registry as markdown
-- **Settings go in JSON** (`.claude/claude-boost.json` + `.claude/settings.json`)
+- **Settings go in `.claude/settings.json`** — single source of truth for permissions and hooks
 - **Stay on task** — do NOT suggest installing unrelated tools
 - **Update progress after each phase** — this enables resume if interrupted
 - **Read actual code** — don't guess from filenames

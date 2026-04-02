@@ -42,7 +42,7 @@ class ClaudeInitCommand extends Command
 
             if ($freshInstall) {
                 $this->components->warn('Fresh install — .claude/init/ and hooks will be replaced.');
-                $this->line('  <fg=gray>Your CLAUDE.md, registry.json, skills, decisions are preserved.</>');
+                $this->line('  <fg=gray>Your CLAUDE.md, registry.json, skills, and architecture are preserved.</>');
                 if (!$this->confirm('Continue?', false)) {
                     $this->components->warn('Aborted.');
                     return;
@@ -57,7 +57,6 @@ class ClaudeInitCommand extends Command
                 '.claude/init',
                 '.claude/init/templates',
                 '.claude/skills',
-                '.claude/decisions',
                 '.claude/plans',
                 '.claude/hooks',
                 '.claude/logs',
@@ -94,7 +93,7 @@ class ClaudeInitCommand extends Command
 
         // ── Copy templates ──────────────────────────────────────────────
         $this->components->task('Installing templates', function () {
-            $templates = ['skill.md', 'decision.md'];
+            $templates = ['skill.md'];
             foreach ($templates as $template) {
                 $source = __DIR__ . "/../../.claude/init/templates/{$template}";
                 $target = base_path(".claude/init/templates/{$template}");
@@ -107,7 +106,7 @@ class ClaudeInitCommand extends Command
         // ── Install safety hooks ────────────────────────────────────────
         $this->components->task('Installing safety hooks', function () use ($freshInstall) {
             // Copy hook files
-            $hooks = ['preToolUse.sh', 'postToolUse.sh'];
+            $hooks = ['preToolUse.sh'];
             foreach ($hooks as $hook) {
                 $source = __DIR__ . "/../../stubs/hooks/{$hook}";
                 $target = base_path(".claude/hooks/{$hook}");
@@ -121,13 +120,6 @@ class ClaudeInitCommand extends Command
             $this->registerHooks($freshInstall);
         });
 
-        // ── Install guard-rules.yaml ────────────────────────────────────
-        $guardYamlSource = __DIR__ . '/../../stubs/.claude/guard-rules.yaml';
-        $guardYamlTarget = base_path('.claude/guard-rules.yaml');
-        if (File::exists($guardYamlSource) && (!File::exists($guardYamlTarget) || $freshInstall)) {
-            File::copy($guardYamlSource, $guardYamlTarget);
-        }
-
         // ── Laravel Boost ───────────────────────────────────────────────
         $this->offerBoost();
 
@@ -139,9 +131,8 @@ class ClaudeInitCommand extends Command
         $this->line('  <fg=gray>Files installed:</>');
         $this->line('    .claude/init/learn.md          — The learning guide (Claude reads this)');
         $this->line('    .claude/init/guard-rules.md    — Safety rules reference');
-        $this->line('    .claude/init/templates/        — Skill and decision templates');
+        $this->line('    .claude/init/templates/        — Skill template');
         $this->line('    .claude/hooks/preToolUse.sh    — Safety guard (always active)');
-        $this->line('    .claude/hooks/postToolUse.sh   — Convention reminder');
         $this->newLine();
 
         $this->components->warn('Next step — paste this into Claude:');
@@ -177,7 +168,6 @@ class ClaudeInitCommand extends Command
 
         $hookMap = [
             'PreToolUse' => '.claude/hooks/preToolUse.sh',
-            'PostToolUse' => '.claude/hooks/postToolUse.sh',
         ];
 
         foreach ($hookMap as $hookType => $command) {

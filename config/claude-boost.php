@@ -8,7 +8,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Minimal config for the Laravel wrapper. The real project configuration
-    | lives in .claude/claude-boost.json, created interactively by Claude
+    | lives in .claude/settings.json, created interactively by Claude
     | when it runs learn.md.
     |
     | This file only affects the artisan commands (claude:init, claude:doctor,

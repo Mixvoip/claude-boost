@@ -119,8 +119,8 @@ fi
 # ──────────────────────────────────────────────────────────────────────────────
 
 PERM_LEVEL="standard"
-if [ -f "$PROJECT_ROOT/.claude/claude-boost.json" ]; then
-    configured_level=$(jq -r '.permission_level // "standard"' "$PROJECT_ROOT/.claude/claude-boost.json" 2>/dev/null)
+if [ -f "$PROJECT_ROOT/.claude/settings.json" ]; then
+    configured_level=$(jq -r '.permission_level // "standard"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null)
     if [ -n "$configured_level" ] && [ "$configured_level" != "null" ]; then
         PERM_LEVEL="$configured_level"
     fi

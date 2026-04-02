@@ -47,7 +47,7 @@ class ClaudeUpdateCommand extends Command
 
         // ── Update templates ────────────────────────────────────────────
         $this->components->task('Updating templates', function () {
-            $templates = ['skill.md', 'decision.md'];
+            $templates = ['skill.md'];
             foreach ($templates as $template) {
                 $source = __DIR__ . "/../../.claude/init/templates/{$template}";
                 $target = base_path(".claude/init/templates/{$template}");
@@ -60,7 +60,7 @@ class ClaudeUpdateCommand extends Command
 
         // ── Update guard hooks to latest ────────────────────────────────
         $this->components->task('Updating safety guard hooks', function () {
-            $hooks = ['preToolUse.sh', 'postToolUse.sh'];
+            $hooks = ['preToolUse.sh'];
             foreach ($hooks as $hook) {
                 $source = __DIR__ . "/../../stubs/hooks/{$hook}";
                 $target = base_path(".claude/hooks/{$hook}");
@@ -72,36 +72,12 @@ class ClaudeUpdateCommand extends Command
             }
         });
 
-        // ── Update guard-rules.yaml ─────────────────────────────────────
-        $guardYamlSource = __DIR__ . '/../../stubs/.claude/guard-rules.yaml';
-        $guardYamlTarget = base_path('.claude/guard-rules.yaml');
-        if (File::exists($guardYamlSource)) {
-            if (!File::exists($guardYamlTarget)) {
-                File::copy($guardYamlSource, $guardYamlTarget);
-            } else {
-                $this->line('  <fg=gray>guard-rules.yaml preserved (your customizations kept).</>');
-            }
-        }
-
-        // ── Update package version ──────────────────────────────────────
-        $newVersion = $this->getPackageVersion();
-        $settingsPath = base_path('.claude/claude-boost.json');
-        if (File::exists($settingsPath)) {
-            $settings = json_decode(File::get($settingsPath), true) ?? [];
-            $oldVersion = $settings['version'] ?? 'unknown';
-            $settings['version'] = $newVersion;
-            $settings['last_updated'] = now()->toIso8601String();
-            File::put($settingsPath, json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-            $this->newLine();
-            $this->components->info("Package updated: {$oldVersion} → {$newVersion}");
-        }
-
         // ── Summary ─────────────────────────────────────────────────────
         $this->newLine();
         $this->components->info('Update complete!');
         $this->newLine();
         $this->line('  <fg=gray>Updated: learn.md, guard rules, templates, hooks.</>');
-        $this->line('  <fg=gray>Your registry, CLAUDE.md, guidelines, skills, and decisions are preserved.</>');
+        $this->line('  <fg=gray>Your registry, CLAUDE.md, guidelines, architecture, and skills are preserved.</>');
         $this->newLine();
         $this->components->warn('To refresh project knowledge, prompt Claude:');
         $this->newLine();
@@ -111,18 +87,4 @@ class ClaudeUpdateCommand extends Command
         $this->newLine();
     }
 
-    private function getPackageVersion(): string
-    {
-        $composerLock = base_path('composer.lock');
-        if (File::exists($composerLock)) {
-            $lock = json_decode(File::get($composerLock), true);
-            $packages = array_merge($lock['packages'] ?? [], $lock['packages-dev'] ?? []);
-            foreach ($packages as $package) {
-                if (($package['name'] ?? '') === 'ualimxvp/claude-boost') {
-                    return $package['version'] ?? 'dev';
-                }
-            }
-        }
-        return 'dev';
-    }
 }

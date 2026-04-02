@@ -27,7 +27,6 @@ class CommandsTest extends TestCase
         File::ensureDirectoryExists(base_path('.claude/init'));
         File::ensureDirectoryExists(base_path('.claude/hooks'));
         File::ensureDirectoryExists(base_path('.claude/skills'));
-        File::ensureDirectoryExists(base_path('.claude/decisions'));
         File::ensureDirectoryExists(base_path('.claude/plans'));
         File::ensureDirectoryExists(base_path('.claude/logs'));
     }
@@ -35,10 +34,8 @@ class CommandsTest extends TestCase
     private function cleanupClaudeDirectory(): void
     {
         $paths = [
-            base_path('.claude/claude-boost.json'),
             base_path('.claude/registry.json'),
             base_path('.claude/CLAUDE.md'),
-            base_path('.claude/guard-rules.yaml'),
             base_path('.claude/.gitignore'),
             base_path('.claude/settings.json'),
             base_path('.claude/learn-progress.json'),
@@ -62,7 +59,6 @@ class CommandsTest extends TestCase
         $this->assertDirectoryExists(base_path('.claude/init'));
         $this->assertDirectoryExists(base_path('.claude/hooks'));
         $this->assertDirectoryExists(base_path('.claude/skills'));
-        $this->assertDirectoryExists(base_path('.claude/decisions'));
     }
 
     public function test_init_installs_learn_md(): void
@@ -79,9 +75,7 @@ class CommandsTest extends TestCase
             ->assertSuccessful();
 
         $this->assertFileExists(base_path('.claude/hooks/preToolUse.sh'));
-        $this->assertFileExists(base_path('.claude/hooks/postToolUse.sh'));
         $this->assertTrue(is_executable(base_path('.claude/hooks/preToolUse.sh')));
-        $this->assertTrue(is_executable(base_path('.claude/hooks/postToolUse.sh')));
     }
 
     public function test_init_registers_hooks_in_settings(): void
@@ -95,7 +89,6 @@ class CommandsTest extends TestCase
         $settings = json_decode(File::get($settingsPath), true);
         $this->assertArrayHasKey('hooks', $settings);
         $this->assertArrayHasKey('PreToolUse', $settings['hooks']);
-        $this->assertArrayHasKey('PostToolUse', $settings['hooks']);
     }
 
     // ── claude:doctor ───────────────────────────────────────────────────
@@ -131,6 +124,5 @@ class CommandsTest extends TestCase
             ->assertSuccessful();
 
         $this->assertFileExists(base_path('.claude/hooks/preToolUse.sh'));
-        $this->assertFileExists(base_path('.claude/hooks/postToolUse.sh'));
     }
 }

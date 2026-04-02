@@ -30,19 +30,16 @@ class ClaudeDoctorCommand extends Command
         $this->checkFile('CLAUDE.md', 'Claude instructions (project root)');
         $this->checkFile('.claude/registry.json', 'Codebase registry');
 
-        // ── Settings ────────────────────────────────────────────────────
-        $this->section('Settings');
-        $this->checkFile('.claude/claude-boost.json', 'Package settings');
-        $this->checkSettings();
+        // ── Documentation ───────────────────────────────────────────────
+        $this->section('Documentation');
+        $this->checkFile('.claude/architecture.md', 'Architecture documentation');
+        $this->checkFile('.claude/guidelines.md', 'Project conventions');
 
         // ── Hooks ───────────────────────────────────────────────────────
         $this->section('Hooks');
         $this->checkFile('.claude/hooks/preToolUse.sh', 'Safety guard hook');
-        $this->checkFile('.claude/hooks/postToolUse.sh', 'Convention checker hook');
         $this->checkExecutable('.claude/hooks/preToolUse.sh', 'preToolUse.sh executable');
-        $this->checkExecutable('.claude/hooks/postToolUse.sh', 'postToolUse.sh executable');
         $this->checkHookRegistered('PreToolUse', '.claude/hooks/preToolUse.sh');
-        $this->checkHookRegistered('PostToolUse', '.claude/hooks/postToolUse.sh');
 
         // ── System dependencies ─────────────────────────────────────────
         $this->section('System Dependencies');
@@ -59,9 +56,7 @@ class ClaudeDoctorCommand extends Command
 
         // ── Generated directories ──────────────────────────────────────
         $this->section('Generated Content');
-        $this->checkDirectory('.claude/guidelines', 'Guidelines directory');
         $this->checkDirectory('.claude/skills', 'Skills directory');
-        $this->checkDirectory('.claude/decisions', 'Decisions directory');
 
         // ── Framework & Boost ───────────────────────────────────────────
         $this->section('Framework & Integrations');
@@ -196,35 +191,6 @@ class ClaudeDoctorCommand extends Command
         }
     }
 
-    private function checkSettings(): void
-    {
-        $path = base_path('.claude/claude-boost.json');
-        if (!File::exists($path)) {
-            return; // Already reported by checkFile
-        }
-
-        $settings = json_decode(File::get($path), true);
-        if ($settings === null) {
-            $this->checkFail('Settings file is corrupt — invalid JSON');
-            return;
-        }
-
-        $model = $settings['model'] ?? $settings['settings']['model'] ?? null;
-        if ($model) {
-            $validModels = ['sonnet', 'opus', 'haiku'];
-            if (in_array($model, $validModels)) {
-                $this->pass("Model: {$model}");
-            } else {
-                $this->checkWarn("Model '{$model}' is not a recognized family name", 'Valid: sonnet, opus, haiku');
-            }
-        }
-
-        $level = $settings['permission_level'] ?? $settings['settings']['permission'] ?? null;
-        if ($level) {
-            $this->pass("Permission level: {$level}");
-        }
-    }
-
     private function checkRegistryHealth(): void
     {
         $path = base_path('.claude/registry.json');
@@ -330,6 +296,18 @@ class ClaudeDoctorCommand extends Command
             $this->pass('CLAUDE.md references registry');
         } else {
             $this->checkWarn('CLAUDE.md does not reference registry', 'Claude may not check for duplicates');
+        }
+
+        if (str_contains($content, 'architecture.md')) {
+            $this->pass('CLAUDE.md references architecture docs');
+        } else {
+            $this->checkWarn('CLAUDE.md does not reference architecture.md');
+        }
+
+        if (str_contains($content, 'guidelines.md')) {
+            $this->pass('CLAUDE.md references guidelines');
+        } else {
+            $this->checkWarn('CLAUDE.md does not reference guidelines.md');
         }
     }
 }

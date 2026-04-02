@@ -11,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/guard-destructive.sh",
+            "command": "bash stubs/hooks/preToolUse.sh",
             "timeout": 5
           }
         ]

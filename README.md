@@ -7,7 +7,7 @@
 
 > One file. Zero commands. Makes Claude smart about your codebase.
 
-Drop one folder into any project — PHP, JavaScript, Python, Go, Rust, Ruby, Java, anything — and Claude becomes a senior developer who knows your entire codebase. It reads your code, builds a registry, detects duplicates, learns your conventions, sets up safety guards, and writes a CLAUDE.md that persists across every session.
+Drop one folder into any project — PHP, JavaScript, Python, Go, Rust, Ruby, Java, anything — and Claude becomes a senior developer who knows your entire codebase. It reads your code, builds a registry, detects duplicates, learns your conventions, sets up safety guards, and writes a lean CLAUDE.md that persists across every session.
 
 ## Install (Any Project)
 
@@ -37,20 +37,20 @@ claude "Read .claude/init/learn.md and execute every task in it"
 
 ## What Claude Does
 
-When Claude reads `learn.md`, it runs a **13-step interactive setup**:
+When Claude reads `learn.md`, it runs a **12-step interactive setup**:
 
 0. **Checks for previous progress** — resumes if interrupted
 1. **Discovers your stack** — languages, frameworks, databases, testing tools
-2. **Asks you questions** — model preference, permission level, features to enable
+2. **Asks you questions** — permission level, features to enable
 3. **Drafts CLAUDE.md early** — safety net in case of interruption
 4. **Deep scans your codebase** — language-aware scanning (not just file listing)
 5. **Builds a registry** — every class, function, route, model cataloged in JSON
 6. **Detects duplicates** — synonym-aware comparison (30+ synonym groups)
 7. **Learns your conventions** — from your actual code, not imposed rules
-8. **Installs safety hooks** — blocks destructive commands via shell hooks
+8. **Installs safety hook** — blocks destructive commands via shell hook
 9. **Maps dependencies** — traces who depends on what
-10. **Creates skills, decisions, git standards** — module docs, ADRs, branch/commit rules
-11. **Finalizes CLAUDE.md** — comprehensive project brain, read every session
+10. **Creates skills, architecture docs, git standards** — module docs, architecture map, branch/commit rules
+11. **Finalizes lean CLAUDE.md** — project essentials with pointers to deep docs
 12. **Final summary** — reports what was created and next steps
 
 If interrupted at any point, just say "continue" or re-paste learn.md. Claude reads `learn-progress.json` and picks up exactly where it left off.
@@ -61,28 +61,24 @@ If interrupted at any point, just say "continue" or re-paste learn.md. Claude re
 
 ```
 your-project/
-├── CLAUDE.md                        <- Claude reads this every session
+├── CLAUDE.md                        <- Lean essentials (~20 lines), loaded every session
 ├── .claude/
 │   ├── .gitignore                   <- Ignores logs/, settings.local.json, learn-progress.json
-│   ├── claude-boost.json            <- Your config (model, permissions, features)
-│   ├── settings.json                <- Claude permission settings & hook registration
+│   ├── settings.json                <- Permissions, hooks, permission_level
 │   ├── registry.json                <- Every class, service, function cataloged
-│   ├── guard-rules.yaml             <- Safety rule definitions
+│   ├── architecture.md              <- Module map, data flow (read on-demand)
 │   ├── guidelines.md                <- Conventions learned from your code
 │   ├── learn-progress.json          <- Resume tracker (gitignored)
 │   ├── init/                        <- The learning prompts
 │   │   ├── learn.md
 │   │   ├── guard-rules.md
 │   │   └── templates/
-│   │       ├── skill.md
-│   │       └── decision.md
+│   │       └── skill.md
 │   ├── guidelines/                  <- Git standards and other guides
-│   ├── skills/                      <- Module documentation
-│   ├── decisions/                   <- Architectural decision records
+│   ├── skills/                      <- Module documentation (read on-demand)
 │   ├── plans/                       <- Implementation plans
-│   ├── hooks/                       <- Safety & convention hooks
-│   │   ├── preToolUse.sh
-│   │   └── postToolUse.sh
+│   ├── hooks/
+│   │   └── preToolUse.sh            <- Safety guard (always active)
 │   └── logs/                        <- Guard logs (gitignored)
 ```
 
@@ -95,7 +91,6 @@ your-project/
 | Claude creates `formatCurrency()` when `convertMoney()` exists | Registry + synonym-aware duplicate detection |
 | Claude forgets your architecture every session | CLAUDE.md is read automatically every session |
 | You re-explain patterns and conventions | Guidelines and skills persist across sessions |
-| Claude makes decisions that contradict settled ones | Decision log prevents revisiting |
 | Claude doesn't know your domain rules | Domain rules are in CLAUDE.md |
 | Works only for one language | Works for any language — Claude reads any code |
 
@@ -118,7 +113,7 @@ composer update ualimxvp/claude-boost
 php artisan claude:update
 ```
 
-This refreshes learn.md, hooks, and templates to the latest version. Your registry, CLAUDE.md, guidelines, skills, and decisions are preserved.
+This refreshes learn.md, hooks, and templates to the latest version. Your registry, CLAUDE.md, guidelines, architecture, and skills are preserved.
 
 ---
 
@@ -138,7 +133,7 @@ Everything else is handled by Claude reading learn.md.
 
 ## Safety
 
-Guard hooks (`preToolUse.sh`) block destructive commands in real-time:
+Guard hook (`preToolUse.sh`) blocks destructive commands in real-time:
 
 - `DROP DATABASE`, `TRUNCATE TABLE`, `DELETE` without WHERE
 - `rm -rf` on critical directories
@@ -146,7 +141,7 @@ Guard hooks (`preToolUse.sh`) block destructive commands in real-time:
 - `chmod 777`, direct `.env` manipulation
 - Production migrations, `curl | bash`
 
-The hooks are pure bash — no PHP runtime needed. They work for any language.
+The hook is pure bash — no PHP runtime needed. Works for any language.
 
 ---
 
@@ -156,7 +151,6 @@ CLAUDE.md instructs Claude to keep everything updated:
 
 - **New code created** -> Claude updates registry.json
 - **Module changed** -> Claude updates the skill file
-- **Architecture decision made** -> Claude logs it in decisions/
 - **Major feature lands** -> Claude updates CLAUDE.md
 
 You don't maintain these files manually. Claude does it during normal development.
@@ -177,19 +171,18 @@ git commit -m "Add Claude Boost project context"
 git push
 ```
 
-Sensitive files like `learn-progress.json`, `settings.local.json`, and `logs/` are already gitignored. Everything else — registry, guidelines, skills, hooks, decisions, and CLAUDE.md — is safe and meant to be shared.
+Sensitive files like `learn-progress.json`, `settings.local.json`, and `logs/` are already gitignored. Everything else — registry, guidelines, skills, hooks, and CLAUDE.md — is safe and meant to be shared.
 
 ### What Gets Published
 
 | File | Shared? | Why |
 |------|---------|-----|
-| `CLAUDE.md` | Yes | Project brain — every developer's Claude reads this |
+| `CLAUDE.md` | Yes | Project essentials — every developer's Claude reads this |
 | `registry.json` | Yes | Codebase catalog — prevents duplicate code |
-| `guard-rules.yaml` | Yes | Safety rules — same protection for everyone |
+| `architecture.md` | Yes | Module map & data flow — shared knowledge |
 | `guidelines.md` | Yes | Conventions — consistent code style |
 | `skills/` | Yes | Module docs — shared knowledge |
-| `decisions/` | Yes | Architecture decisions — no revisiting settled choices |
-| `hooks/` | Yes | Safety & convention hooks — team-wide guardrails |
+| `hooks/preToolUse.sh` | Yes | Safety guard — team-wide guardrails |
 | `settings.json` | Yes | Hook registration — auto-activates for the team |
 | `learn-progress.json` | No | Gitignored — per-user tracking |
 | `settings.local.json` | No | Gitignored — per-user permissions |
@@ -222,14 +215,14 @@ Claude already knows how to read files — it does it extremely well. Instead of
 
 | Aspect | Plugin-Based Approach | Claude Boost |
 |--------|----------------------|--------------|
-| **Architecture** | Background services, vector DBs, AI compression | Plain files — JSON, Markdown, YAML |
+| **Architecture** | Background services, vector DBs, AI compression | Plain files — JSON and Markdown |
 | **Token cost** | Extra API calls per session/action | Zero additional tokens — Claude reads local files |
 | **Dependencies** | Additional runtimes, databases, HTTP servers | None — just Claude CLI |
 | **Context quality** | AI-generated summaries (lossy) | Structured registry — every class, function, route cataloged |
 | **Portability** | Tied to plugin system | Drop a folder into any project, done |
 | **Transparency** | Compressed context you can't easily inspect | Human-readable files you can review and version-control |
 
-A registry, guidelines, decision logs, and skills — all in plain files that cost zero extra tokens, survive across every session, and work with any language.
+A registry, guidelines, and skills — all in plain files that cost zero extra tokens, survive across every session, and work with any language.
 
 The best tools work *with* the system, not around it.
 
