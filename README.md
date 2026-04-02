@@ -71,9 +71,10 @@ your-project/
 │   ├── skills/                      <- Module documentation
 │   ├── decisions/                   <- Architectural decision records
 │   ├── plans/                       <- Implementation plans
-│   ├── hooks/                       <- Safety & convention hooks
+│   ├── hooks/                       <- Safety, convention & model routing hooks
 │   │   ├── preToolUse.sh
-│   │   └── postToolUse.sh
+│   │   ├── postToolUse.sh
+│   │   └── modelRouter.sh
 │   └── logs/                        <- Guard logs (gitignored)
 ```
 
@@ -159,6 +160,10 @@ You don't maintain these files manually. Claude does it during normal developmen
 **Any project:** Claude CLI installed. That's it.
 
 **Laravel package:** PHP 8.1+, Laravel 10+, `jq`, `git`
+
+## Sponsor
+
+Built in partnership with [Mixvoip](https://www.mixvoip.com). Thanks for supporting open-source development.
 
 ## License
 

@@ -117,10 +117,20 @@ Present your findings and ask everything at once:
 >    Is my detection correct? Type: Monolith / Microservice / Package / CLI / Other?
 >    Any domain rules I should know? (e.g., "prices always in cents", "all times UTC")
 >
-> **2. Model** — Which Claude model for this project?
->    - **Sonnet** — Fast, capable, cost-effective (recommended)
->    - **Opus** — Most capable, deep reasoning
->    - **Haiku** — Fastest, cheapest
+> **2. Model per task** — Which Claude model for each type of work?
+>    Available: **Sonnet** (fast, capable), **Opus** (deep reasoning), **Haiku** (fastest, cheapest)
+>
+>    | Task Type | Default | Your Choice |
+>    |-----------|---------|-------------|
+>    | Bug fixes & small changes | Sonnet | ? |
+>    | New features & architecture | Opus | ? |
+>    | Code review & PR review | Sonnet | ? |
+>    | Refactoring | Sonnet | ? |
+>    | Tests & test generation | Sonnet | ? |
+>    | Documentation & comments | Haiku | ? |
+>    | Quick questions & lookups | Haiku | ? |
+>
+>    Or just pick ONE model for everything: Sonnet / Opus / Haiku
 >
 > **3. Token strategy?** Efficient (terse, recommended) / Balanced / Thorough (verbose)
 >
@@ -211,6 +221,8 @@ settings.local.json
 learn-progress.json
 ```
 
+Check if `.claude/` contains any worktree directories (e.g. `.claude/worktrees/`, or any folder matching `*worktree*`). If found, add them to `.gitignore` so they are never committed — worktrees are per-developer and must not be pushed.
+
 ### 2.2 Write `.claude/claude-boost.json`
 
 ```json
@@ -219,9 +231,14 @@ learn-progress.json
     "version": "2.0.0",
     "initialized_at": "{current ISO 8601 timestamp}",
     "model": {
-        "default": "{user's choice — sonnet/opus/haiku}",
-        "review": "{same}",
-        "orchestration": "{same}",
+        "default": "{user's fallback choice — sonnet/opus/haiku}",
+        "bug_fix": "{model for bug fixes}",
+        "feature": "{model for new features & architecture}",
+        "review": "{model for code/PR review}",
+        "refactor": "{model for refactoring}",
+        "test": "{model for tests & test generation}",
+        "docs": "{model for documentation}",
+        "lookup": "{model for quick questions}",
         "token_strategy": "{efficient/balanced/thorough}"
     },
     "permission_level": "{strict/standard/autonomous/bypass_all}",
@@ -308,7 +325,8 @@ even if the scan fails, gets cancelled, or hits context limits.
 {What this project does — from user's description}
 
 ## Config
-Model: `{model}` | Stack: {language}/{framework} | Permissions: `{permission_level}`
+Stack: {language}/{framework} | Permissions: `{permission_level}`
+Model routing: auto — see `.claude/claude-boost.json` for per-task model mapping.
 
 ## Tech Stack
 {Language, framework, database, key tools — from what you detected}
@@ -792,20 +810,101 @@ fi
 exit 0
 ```
 
-### 8.3 Make Hooks Executable
+### 8.3 Create Model Router Hook
+
+Create `.claude/hooks/modelRouter.sh` — this hook runs on every prompt submission and switches the model based on the nature of the task.
+
+Read the user's model preferences from `.claude/claude-boost.json` and map prompt keywords to the right model.
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+if ! command -v jq &> /dev/null; then
+    exit 0
+fi
+
+input=$(cat)
+prompt=$(echo "$input" | jq -r '.prompt // ""' | tr '[:upper:]' '[:lower:]')
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+CONFIG="$PROJECT_ROOT/.claude/claude-boost.json"
+
+if [ ! -f "$CONFIG" ]; then
+    exit 0
+fi
+
+# Read model mappings from config
+model_default=$(jq -r '.model.default // "sonnet"' "$CONFIG")
+model_bug_fix=$(jq -r '.model.bug_fix // .model.default // "sonnet"' "$CONFIG")
+model_feature=$(jq -r '.model.feature // .model.default // "sonnet"' "$CONFIG")
+model_review=$(jq -r '.model.review // .model.default // "sonnet"' "$CONFIG")
+model_refactor=$(jq -r '.model.refactor // .model.default // "sonnet"' "$CONFIG")
+model_test=$(jq -r '.model.test // .model.default // "sonnet"' "$CONFIG")
+model_docs=$(jq -r '.model.docs // .model.default // "haiku"' "$CONFIG")
+model_lookup=$(jq -r '.model.lookup // .model.default // "haiku"' "$CONFIG")
+
+# Map model names to model IDs
+resolve_model() {
+    case "$1" in
+        opus)   echo "claude-opus-4-6" ;;
+        haiku)  echo "claude-haiku-4-5-20251001" ;;
+        *)      echo "claude-sonnet-4-6" ;;
+    esac
+}
+
+selected=""
+
+# Match prompt to task type (first match wins)
+if echo "$prompt" | grep -qiE "\b(fix|bug|error|broken|crash|issue|debug|patch|hotfix|failing)\b"; then
+    selected="$model_bug_fix"
+elif echo "$prompt" | grep -qiE "\b(review|pr|merge request|pull request|code review|check this)\b"; then
+    selected="$model_review"
+elif echo "$prompt" | grep -qiE "\b(refactor|restructure|reorganize|clean up|simplify|extract|move)\b"; then
+    selected="$model_refactor"
+elif echo "$prompt" | grep -qiE "\b(test|spec|coverage|unit test|integration test|e2e|assert)\b"; then
+    selected="$model_test"
+elif echo "$prompt" | grep -qiE "\b(doc|document|readme|comment|explain|jsdoc|phpdoc|docblock)\b"; then
+    selected="$model_docs"
+elif echo "$prompt" | grep -qiE "\b(what is|where is|how does|show me|find|search|list|which file|look up)\b"; then
+    selected="$model_lookup"
+elif echo "$prompt" | grep -qiE "\b(feature|implement|create|build|add|new|design|architect)\b"; then
+    selected="$model_feature"
+fi
+
+# Fall back to default if no match
+if [ -z "$selected" ]; then
+    selected="$model_default"
+fi
+
+model_id=$(resolve_model "$selected")
+
+echo "{\"model\":\"$model_id\"}"
+exit 0
+```
+
+### 8.4 Make Hooks Executable
 
 ```bash
 chmod +x .claude/hooks/preToolUse.sh
 chmod +x .claude/hooks/postToolUse.sh
+chmod +x .claude/hooks/modelRouter.sh
 ```
 
-### 8.4 Register Hooks
+### 8.5 Register Hooks
 
 Read `.claude/settings.json`, merge (don't overwrite) the hooks section:
 
 ```json
 {
     "hooks": {
+        "UserPromptSubmit": [
+            {
+                "type": "command",
+                "command": ".claude/hooks/modelRouter.sh"
+            }
+        ],
         "PreToolUse": [
             {
                 "type": "command",
@@ -952,6 +1051,119 @@ Create `.claude/guidelines/git.md`:
 {How to verify}
 ```
 
+### 10.4 Issue Templates (if git_platform is GitLab or GitHub)
+
+Create issue templates so every ticket has structured information for developers and Claude reviewers.
+
+**For GitLab:** create `.gitlab/issue_templates/` directory.
+**For GitHub:** create `.github/ISSUE_TEMPLATE/` directory.
+
+#### Feature Template
+
+**GitLab:** `.gitlab/issue_templates/feature.md`
+**GitHub:** `.github/ISSUE_TEMPLATE/feature.md`
+
+```markdown
+---
+name: Feature Request
+about: Propose a new feature
+labels: feature
+---
+
+## User Story
+
+As a {role}, I want {capability} so that {benefit}.
+
+## Description
+
+{What needs to be built — clear, specific, no ambiguity}
+
+## Acceptance Criteria
+
+- [ ] {Criterion 1 — measurable, testable}
+- [ ] {Criterion 2}
+- [ ] {Criterion 3}
+
+## Technical Notes
+
+- Affected modules: {list relevant modules/services}
+- Dependencies: {any blockers or prerequisites}
+- Database changes: {migrations needed? schema changes?}
+
+## Test Plan
+
+- [ ] Unit tests: {what to test}
+- [ ] Integration tests: {what to test}
+- [ ] Edge cases: {what could go wrong}
+
+## Out of Scope
+
+{What this ticket does NOT cover — prevents scope creep}
+```
+
+#### Bug/Fix Template
+
+**GitLab:** `.gitlab/issue_templates/bug.md`
+**GitHub:** `.github/ISSUE_TEMPLATE/bug.md`
+
+```markdown
+---
+name: Bug Report
+about: Report a bug or unexpected behavior
+labels: bug
+---
+
+## Bug Description
+
+{What is happening vs. what should happen}
+
+## Steps to Reproduce
+
+1. {Step 1}
+2. {Step 2}
+3. {Step 3}
+
+## Expected Behavior
+
+{What should happen}
+
+## Actual Behavior
+
+{What happens instead — include error messages, logs, screenshots if available}
+
+## Environment
+
+- Branch/version: {branch or tag}
+- Environment: {local/staging/production}
+- Relevant config: {any settings that matter}
+
+## Acceptance Criteria
+
+- [ ] Bug no longer reproducible following the steps above
+- [ ] {Any regression tests needed}
+- [ ] {Any related areas to verify}
+
+## Technical Notes
+
+- Suspected cause: {if known}
+- Affected modules: {list relevant modules/services}
+- Related tickets: {links if any}
+
+## Test Plan
+
+- [ ] Test that reproduces the bug (should fail before fix, pass after)
+- [ ] Regression tests for related functionality
+- [ ] Edge cases: {what else could break}
+```
+
+**After creating templates**, add a note in `.claude/guidelines/git.md` referencing them:
+```markdown
+## Issue Templates
+- Feature tickets: use the feature template — must include user story, acceptance criteria, and test plan
+- Bug tickets: use the bug template — must include reproduction steps and acceptance criteria
+- Claude reviewers rely on acceptance criteria and test plans to validate work
+```
+
 Update progress: add `"skills"` to `completed_phases`, set `current_phase` to `"claude_md_final"`
 
 ---
@@ -971,7 +1183,21 @@ Final structure:
 {What this project does — 1-2 sentences}
 
 ## Config
-Model: `{model}` | Stack: {language}/{framework} | Permissions: `{permission_level}`
+Stack: {language}/{framework} | Permissions: `{permission_level}`
+
+## Model Routing
+Models auto-switch per task via `.claude/hooks/modelRouter.sh`. Config in `.claude/claude-boost.json`.
+
+| Task | Model |
+|------|-------|
+| Bug fixes | {model} |
+| Features & architecture | {model} |
+| Code review | {model} |
+| Refactoring | {model} |
+| Tests | {model} |
+| Docs | {model} |
+| Quick lookups | {model} |
+| Default (no match) | {model} |
 
 ## Tech Stack
 {Language version, framework, database, testing, CI — from actual code}
