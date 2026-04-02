@@ -37,6 +37,36 @@ scan code, and create the intelligence files listed above.
 
 **You MUST execute one of the three modes below. You may NEVER say "everything exists, nothing to do" or skip execution. The user ran this file because they WANT a scan. Always proceed.**
 
+### Pre-Flight: Audit CLAUDE.md (EVERY RUN, EVERY MODE)
+
+**Before doing anything else**, if `CLAUDE.md` exists in the project root, read it and check for bloat.
+CLAUDE.md loads into context on EVERY message — every wasted line burns tokens for the entire session.
+
+**Bloat indicators — if ANY are true, flag for rewrite in Phase 11:**
+
+1. **Over 40 lines** — target is 15-30 lines, absolute max 40
+2. **Contains content that belongs elsewhere:**
+   - File paths or directory trees → belongs in `architecture.md`
+   - Coding conventions or patterns → belongs in `guidelines.md`
+   - Module documentation → belongs in `skills/`
+   - Dependency lists → belongs in `registry.md`
+3. **Contains generic advice** Claude already knows — "follow SOLID", "write clean code", "use meaningful names", "handle errors gracefully", "write tests"
+4. **Repeats framework defaults** — "use migrations for schema changes", "controllers handle HTTP", "models represent data"
+5. **Has verbose descriptions** that could be one-liners — paragraphs where a single sentence would do
+6. **Lists every file or class** instead of referencing registry.md
+7. **Contains stale information** — references to files, features, or patterns that no longer exist
+8. **Has sections with no project-specific value** — sections that would be identical for any project using the same framework
+
+If bloat is found, tell the user:
+> **CLAUDE.md audit: {N} lines detected, target is 15-30.**
+> Found: {list bloat types, e.g., "generic advice, directory tree, verbose descriptions"}
+> Will rewrite in Phase 11 to cut the fat.
+
+If CLAUDE.md is already lean (under 40 lines, no bloat), say:
+> **CLAUDE.md audit: clean ({N} lines)**
+
+Proceed to mode detection.
+
 Check if `.claude/learn-progress.json` exists.
 
 ### Mode A: RESUME (learn-progress.json EXISTS)
@@ -44,8 +74,9 @@ Check if `.claude/learn-progress.json` exists.
 2. Check `completed_phases` array — skip all completed phases
 3. Check `current_phase` and `current_phase_progress` — resume from that exact point
 4. Read `user_config` — DO NOT re-ask questions, the answers are saved
-5. Tell the user: "Resuming from {current_phase}..."
-6. Jump directly to the incomplete phase
+5. If pre-flight audit found CLAUDE.md bloat AND `claude_md_final` is in `completed_phases`, remove it from `completed_phases` so Phase 11 runs again
+6. Tell the user: "Resuming from {current_phase}..."
+7. Jump directly to the incomplete phase
 
 ### Mode B: REFRESH (no learn-progress.json, BUT `.claude/settings.json` has `permission_level` AND `CLAUDE.md` exists)
 
@@ -726,10 +757,23 @@ Guard hooks active — destructive commands are blocked automatically.
 ```
 
 **Rules:**
-- Target 15-30 lines. Every line must earn its place.
+- Target 15-30 lines. Every line must earn its place. Absolute max 40.
 - Only project-specific knowledge — never generic (no "follow SOLID" etc.)
 - Reference files instead of repeating their content
 - Remove the "Draft" notice — it's now complete
+
+**Mandatory trim — DELETE these if found in existing CLAUDE.md:**
+- Directory trees or file listings (use `architecture.md` or `registry.md`)
+- Coding conventions, naming rules, patterns (use `guidelines.md`)
+- Module docs, class descriptions, method lists (use `skills/` and `registry.md`)
+- Generic advice Claude already knows: "follow SOLID", "write clean code", "use meaningful names", "handle errors", "write tests", "keep functions small", "use dependency injection"
+- Framework defaults: "use migrations", "controllers handle HTTP", "models extend Eloquent", "use form requests for validation"
+- Verbose multi-line descriptions — compress to one line or move to architecture.md
+- Stale references to renamed/deleted files, features, or patterns
+- Dependency lists, import maps, package inventories
+- Anything that would be identical for any project using the same framework
+
+**The test:** Read every line and ask "Would Claude get this wrong without being told?" If no, delete it.
 
 Update progress: add `"claude_md_final"` to `completed_phases`, set `current_phase` to `"summary"`
 
