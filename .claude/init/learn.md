@@ -53,7 +53,6 @@ Check if `.claude/learn-progress.json` exists.
 
 1. Read `.claude/settings.json` to get `permission_level`, `git_platform`, and `permissions`
 2. Read `CLAUDE.md` to extract the project name, description, and stack
-3. Read existing `.claude/registry.json`, `.claude/guidelines.md`, `.claude/architecture.md` if they exist
 4. Tell the user:
 
 > **Refresh mode — re-scanning your codebase for changes.**
@@ -171,7 +170,7 @@ Present your findings and ask everything at once:
 >    8. Plans & Tickets — development planning
 >    9. Testing — test enforcement (framework-specific)
 >    10. Agent Pipeline — autonomous plan/develop/review agents for tickets
-         >    Default: **1, 2, 3, 4, 5**
+>    Default: **1, 2, 3, 4, 5**
 >
 > **4. Git platform?** GitLab / GitHub / Both / None
 
@@ -347,58 +346,11 @@ Map the project structure. Exclude: vendor, node_modules, .git, dist, build, __p
 
 Understand: How is code organized? By feature? By type? Flat? Nested?
 
-### 4.3 Key Code — Read by Stack
+### 4.3 Key Code
 
 Read 3-5 files per module. **Read actual code — never guess from filenames.**
 
-#### PHP / Laravel
-- Entry: routes/web.php, routes/api.php
-- Models: app/Models/ (relationships, casts, scopes)
-- Services: app/Services/ (business logic)
-- Controllers: app/Http/Controllers/ (thin or fat?)
-- Migrations: database/migrations/ (schema)
-- Config: config/*.php (key settings)
-- Events: app/Events/, app/Listeners/ (event-driven patterns)
-- Jobs: app/Jobs/ (queue patterns)
-- Middleware: app/Http/Middleware/
-
-#### JavaScript / TypeScript (React, Next.js, Vue, Node)
-- Entry: src/index.*, src/App.*, pages/*, app/*
-- Components: src/components/ (patterns, props, state)
-- API routes: pages/api/*, app/api/*, routes/*
-- State: src/store/*, src/hooks/* (Redux, Zustand, Pinia)
-- Utilities: src/utils/*, src/lib/*
-- Types: src/types/*, *.d.ts
-- Config: next.config.*, vite.config.*, tsconfig.json
-
-#### Python / Django / Flask
-- Entry: manage.py, app.py, main.py, wsgi.py
-- Models: models.py, */models.py (ORM, relationships)
-- Views: views.py, */views.py (endpoints, serializers)
-- URLs: urls.py, */urls.py (routing)
-- Config: settings.py, config.py
-- Signals: signals.py (event-driven)
-- Tasks: tasks.py, celery.py (async jobs)
-
-#### Go
-- Entry: main.go, cmd/
-- Handlers: handlers/, controllers/ (HTTP handlers)
-- Models: models/, types/ (structs, interfaces)
-- Routes: routes.go, router.go
-- Config: config/, internal/config/
-- Middleware: middleware/
-
-#### Ruby / Rails
-- Entry: config/routes.rb
-- Models: app/models/ (ActiveRecord)
-- Controllers: app/controllers/
-- Services: app/services/
-- Jobs: app/jobs/ (Sidekiq, ActiveJob)
-- Config: config/
-
-#### For Any Other Language
-- Find entry points, main modules, data models, routing/endpoints, config
-- Read the most important files to understand patterns
+Focus on: entry points, models/data layer, services/business logic, controllers/handlers, routes, config, and middleware. You already know where these live for each framework — find them and read them.
 
 ### 4.4 What to Note During Scanning
 
@@ -498,37 +450,9 @@ Update progress: add `"registry"` to `completed_phases`, set `current_phase` to 
 
 After building the registry, compare functions/methods for potential duplicates.
 
-### Synonym Groups (Use These for Matching)
-
-```
-get = fetch = retrieve = find = load = read = obtain = query
-create = make = build = generate = produce = construct = new
-send = dispatch = notify = emit = broadcast = transmit = push
-delete = remove = destroy = drop = purge = clear = clean
-update = modify = change = edit = patch = alter = set
-validate = verify = check = assert = ensure = confirm = test
-format = render = display = present = show = output
-transform = convert = map = parse = translate = serialize
-save = store = persist = write = put = cache
-handle = process = execute = run = perform = apply
-auth = authenticate = authorize = login = verify = identify
-money = currency = price = cost = amount = payment = fee = charge
-user = account = profile = member = customer = client
-log = record = track = audit = trace = monitor
-config = setting = option = preference = parameter
-```
-
-Add project-specific synonyms based on the domain (e.g., for telecom: call = ring = dial = voip).
-
 ### How to Compare
 
-For each pair of functions/methods with similar names or purposes:
-
-1. **Name similarity** — Do the names use synonymous words?
-2. **Purpose similarity** — Do they accomplish the same thing?
-3. **Signature similarity** — Similar parameters and return types?
-
-Flag pairs where 2 or more criteria match.
+Compare functions/methods using semantic similarity — functions that accomplish the same thing with different names (e.g., `formatAmount` vs `MoneyFormatter::format`, `getUser` vs `fetchAccount`). Flag pairs where name, purpose, or signature overlap significantly.
 
 ### Save to Registry
 
@@ -623,116 +547,14 @@ Update progress: add `"conventions"` to `completed_phases`, set `current_phase` 
 
 ### 8.1 Create PreToolUse Hook
 
-Create `.claude/hooks/preToolUse.sh` with these guards. The hook must:
-- Read tool input from stdin as JSON (using jq)
-- Extract `tool_name`, `command`, `file_path`
-- Block dangerous commands by outputting `{"decision":"block","reason":"..."}`
-- Allow safe commands by outputting `{"decision":"allow"}`
-- Log blocked actions to `.claude/logs/guard.log`
-
-**Tier 1 — ALWAYS block (any stack):**
+Copy the template and make it executable:
 
 ```bash
-#!/bin/bash
-set -euo pipefail
-
-if ! command -v jq &> /dev/null; then
-    echo '{"decision":"block","reason":"Guard: jq required. Install: brew install jq (macOS) or apt install jq (Linux)."}'
-    exit 0
-fi
-
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.tool_name // ""')
-command=$(echo "$input" | jq -r '.tool_input.command // ""')
-file_path=$(echo "$input" | jq -r '.tool_input.file_path // .tool_input.path // ""')
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
-GUARD_LOG="$PROJECT_ROOT/.claude/logs/guard.log"
-
-log_block() {
-    mkdir -p "$(dirname "$GUARD_LOG")"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] BLOCKED | tool=$tool_name | cmd=$command | file=$file_path | reason=$1" >> "$GUARD_LOG"
-}
-
-block() {
-    log_block "$1"
-    echo "{\"decision\":\"block\",\"reason\":\"Guard: $1\"}"
-    exit 0
-}
-
-if [ "$tool_name" = "bash" ] || [ "$tool_name" = "shell" ]; then
-    # Database destruction
-    echo "$command" | grep -qiE "drop\s+(database|schema)\b" && block "DROP DATABASE is irreversible."
-    echo "$command" | grep -qiE "drop\s+table\s+(if\s+exists\s+)?(users|migrations|sessions)" && block "DROP TABLE on critical table."
-    echo "$command" | grep -qiE "truncate\s+table" && block "TRUNCATE is irreversible data loss."
-    echo "$command" | grep -qiE "delete\s+from\s+\S+\s*(;|\s*$|where\s+1|where\s+true)" && block "DELETE without WHERE."
-
-    # Filesystem destruction
-    echo "$command" | grep -qE "rm\s+-rf\s+(/|/home|/var|/etc|\.)$" && block "rm -rf on system/project root."
-    echo "$command" | grep -qE "rm\s+-rf\s+\.(env|git|claude)" && block "rm -rf on critical files."
-    echo "$command" | grep -qE "rm\s+(-[a-zA-Z]*f[a-zA-Z]*\s+).*(/|app/|src/|config/|database/|resources/)" && block "Forced removal of project directory."
-    echo "$command" | grep -qE "chmod\s+(-R\s+)?777" && block "chmod 777 is dangerous. Use 755 or 644."
-
-    # Git destruction
-    echo "$command" | grep -qE "git\s+push\s+.*(-f|--force).*(main|master|production|staging)" && block "Force push to protected branch."
-    echo "$command" | grep -qE "git\s+push\s+.*(main|master|production|staging).*(-f|--force)" && block "Force push to protected branch."
-    echo "$command" | grep -qE "git\s+branch\s+-D\s+(main|master|production|staging)" && block "Deleting protected branch."
-    echo "$command" | grep -qE "git\s+reset\s+--hard" && block "git reset --hard is destructive. Use revert."
-    echo "$command" | grep -qE "git\s+clean\s+-fd" && block "git clean -fd removes all untracked files."
-
-    # Docker destruction
-    echo "$command" | grep -qE "docker\s+(system|volume)\s+prune" && block "Docker prune removes all unused resources."
-    echo "$command" | grep -qE "docker-compose\s+down\s+-v" && block "docker-compose down -v destroys volumes."
-
-    # Security
-    echo "$command" | grep -qiE "(curl|wget).*\|.*(bash|sh|zsh)" && block "Piping remote script to shell."
-    echo "$command" | grep -qE "kill\s+-9" && block "kill -9 is unsafe. Use graceful shutdown."
-
-    # Stack-specific
-    echo "$command" | grep -qE "php\s+artisan\s+migrate:fresh\s+--force" && block "migrate:fresh --force drops ALL tables."
-    echo "$command" | grep -qE "php\s+artisan\s+db:wipe" && block "db:wipe is irreversible."
-    echo "$command" | grep -qE "php\s+artisan\s+tinker" && block "Tinker bypasses guard checks."
-    echo "$command" | grep -qE "manage\.py\s+flush" && block "Django flush deletes all data."
-    echo "$command" | grep -qE "npm\s+publish" && block "npm publish requires explicit confirmation."
-fi
-
-# File protection
-if [ "$tool_name" = "write" ] || [ "$tool_name" = "edit" ]; then
-    case "$file_path" in
-        *.env|*.env.*) block "Direct write to environment file." ;;
-        */composer.lock|*/package-lock.json|*/yarn.lock|*/pnpm-lock.yaml|*/Gemfile.lock|*/go.sum)
-            block "Direct edit of lockfile. Run package manager instead." ;;
-        */.git/*) block "Direct manipulation of .git internals." ;;
-    esac
-fi
-
-# Permission-level enforcement (reads from settings.json)
-PERM_LEVEL="standard"
-if [ -f "$PROJECT_ROOT/.claude/settings.json" ]; then
-    configured=$(jq -r '.permission_level // "standard"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null)
-    [ -n "$configured" ] && [ "$configured" != "null" ] && PERM_LEVEL="$configured"
-fi
-
-case "$PERM_LEVEL" in
-    strict)
-        [ "$tool_name" = "write" ] || [ "$tool_name" = "edit" ] && block "Strict mode — Claude cannot write files."
-        echo "$command" | grep -qE "^git\s+(commit|push|merge)" && block "Strict mode — no git operations."
-        ;;
-    standard)
-        echo "$command" | grep -qE "^git\s+push" && block "Standard mode — Claude cannot push. Review first."
-        ;;
-esac
-
-echo '{"decision":"allow"}'
-exit 0
-```
-
-### 8.2 Make Hook Executable
-
-```bash
+cp .claude/init/templates/preToolUse.sh .claude/hooks/preToolUse.sh
 chmod +x .claude/hooks/preToolUse.sh
 ```
+
+The template blocks: destructive DB commands, dangerous filesystem ops, force-push to protected branches, docker prune, piping remote scripts to shell, and stack-specific dangers. It also enforces permission levels from settings.json and logs all blocks to `.claude/logs/guard.log`.
 
 ### 8.3 Register Hook
 
@@ -830,147 +652,21 @@ For each module with 3+ related files, create `.claude/skills/{module-name}.md`:
 
 ### 10.2 Git Standards (if git_standards enabled)
 
-Create `.claude/guidelines/git.md`:
-
-```markdown
-# Git Standards
-
-## Branch Naming
-- feature/{description}
-- fix/{description}
-- hotfix/{description}
-- chore/{description}
-
-## Commit Format (Conventional Commits)
-- feat: {description} — new feature
-- fix: {description} — bug fix
-- docs: {description} — documentation
-- refactor: {description} — code restructuring
-- test: {description} — adding tests
-
-## MR/PR Template
-### Summary
-{What and why — 1-3 sentences}
-
-### Changes
-{File-by-file or area-by-area}
-
-### Test Plan
-{How to verify}
-```
+Create `.claude/guidelines/git.md` with:
+- Branch naming: `feature/`, `fix/`, `hotfix/`, `chore/`
+- Conventional commits format: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
+- MR/PR template with Summary, Changes, and Test Plan sections
 
 ### 10.3 Issue Templates (if git_platform is GitLab or GitHub)
 
-Create issue templates so every ticket has structured information for developers and Claude reviewers.
+Create issue templates in the appropriate directory:
+- **GitLab:** `.gitlab/issue_templates/feature.md` and `.gitlab/issue_templates/bug.md`
+- **GitHub:** `.github/ISSUE_TEMPLATE/feature.md` and `.github/ISSUE_TEMPLATE/bug.md`
 
-**For GitLab:** create `.gitlab/issue_templates/` directory.
-**For GitHub:** create `.github/ISSUE_TEMPLATE/` directory.
+Feature template must include: user story, description, acceptance criteria, technical notes, test plan, out of scope.
+Bug template must include: description, steps to reproduce, expected vs actual behavior, environment, acceptance criteria, test plan.
 
-#### Feature Template
-
-**GitLab:** `.gitlab/issue_templates/feature.md`
-**GitHub:** `.github/ISSUE_TEMPLATE/feature.md`
-
-```markdown
----
-name: Feature Request
-about: Propose a new feature
-labels: feature
----
-
-## User Story
-
-As a {role}, I want {capability} so that {benefit}.
-
-## Description
-
-{What needs to be built — clear, specific, no ambiguity}
-
-## Acceptance Criteria
-
-- [ ] {Criterion 1 — measurable, testable}
-- [ ] {Criterion 2}
-- [ ] {Criterion 3}
-
-## Technical Notes
-
-- Affected modules: {list relevant modules/services}
-- Dependencies: {any blockers or prerequisites}
-- Database changes: {migrations needed? schema changes?}
-
-## Test Plan
-
-- [ ] Unit tests: {what to test}
-- [ ] Integration tests: {what to test}
-- [ ] Edge cases: {what could go wrong}
-
-## Out of Scope
-
-{What this ticket does NOT cover — prevents scope creep}
-```
-
-#### Bug/Fix Template
-
-**GitLab:** `.gitlab/issue_templates/bug.md`
-**GitHub:** `.github/ISSUE_TEMPLATE/bug.md`
-
-```markdown
----
-name: Bug Report
-about: Report a bug or unexpected behavior
-labels: bug
----
-
-## Bug Description
-
-{What is happening vs. what should happen}
-
-## Steps to Reproduce
-
-1. {Step 1}
-2. {Step 2}
-3. {Step 3}
-
-## Expected Behavior
-
-{What should happen}
-
-## Actual Behavior
-
-{What happens instead — include error messages, logs, screenshots if available}
-
-## Environment
-
-- Branch/version: {branch or tag}
-- Environment: {local/staging/production}
-- Relevant config: {any settings that matter}
-
-## Acceptance Criteria
-
-- [ ] Bug no longer reproducible following the steps above
-- [ ] {Any regression tests needed}
-- [ ] {Any related areas to verify}
-
-## Technical Notes
-
-- Suspected cause: {if known}
-- Affected modules: {list relevant modules/services}
-- Related tickets: {links if any}
-
-## Test Plan
-
-- [ ] Test that reproduces the bug (should fail before fix, pass after)
-- [ ] Regression tests for related functionality
-- [ ] Edge cases: {what else could break}
-```
-
-**After creating templates**, add a note in `.claude/guidelines/git.md` referencing them:
-```markdown
-## Issue Templates
-- Feature tickets: use the feature template — must include user story, acceptance criteria, and test plan
-- Bug tickets: use the bug template — must include reproduction steps and acceptance criteria
-- Claude reviewers rely on acceptance criteria and test plans to validate work
-```
+Add a note in `.claude/guidelines/git.md` referencing the templates.
 
 ### 10.4 Create Architecture Documentation (MANDATORY)
 
@@ -1041,9 +737,9 @@ Permissions: `{permission_level}`
 - `.claude/guidelines.md` — read ONLY when unsure about conventions or patterns
 - `.claude/skills/{module}.md` — read ONLY when modifying that specific module
 
-## Maintenance (only after significant changes)
-- Update .claude/registry.json if you added new classes/services or removed existing ones
-- Update .claude/skills/{module}.md if a module's API or structure changed
+## Maintenance (only after adding/removing top-level classes, services, or modules)
+- Update .claude/registry.json if a top-level class/service/module was added or removed
+- Update .claude/skills/{module}.md if a module's public API or structure changed
 
 ## Safety
 Guard hooks active — destructive commands are blocked automatically.
@@ -1113,11 +809,10 @@ from CLAUDE.md's "Context Files" and "Maintenance" sections.
 ### When Modifying Code
 1. Read `.claude/skills/{module}.md` only if you're modifying that specific module
 2. Check conventions in `.claude/guidelines.md` only if unsure about patterns
-3. If a file has many dependents (check registry), warn the user
 
-### Maintenance (only after significant changes, not small edits)
-1. Update `.claude/registry.json` only if you added new classes/services or removed existing ones
-2. Update skill files only if a module's API or structure changed
+### Maintenance (only after adding/removing top-level classes, services, or modules — not methods, helpers, or small files)
+1. Update `.claude/registry.json` only if a top-level class/service/module was added or removed
+2. Update skill files only if a module's public API or structure changed
 3. Update `CLAUDE.md` only if major architecture changes happen
 
 ---
