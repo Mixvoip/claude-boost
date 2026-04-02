@@ -566,7 +566,8 @@ Read `.claude/settings.json`, merge (don't overwrite) the hooks section:
       "PreToolUse": [
          {
             "type": "command",
-            "command": ".claude/hooks/preToolUse.sh"
+            "command": ".claude/hooks/preToolUse.sh",
+            "timeout": 30
          }
       ]
    }
