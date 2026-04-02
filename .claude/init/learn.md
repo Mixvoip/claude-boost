@@ -18,6 +18,13 @@ No matter what happens, you MUST produce these files before finishing:
 
 If you are running low on context, skip skills/guidelines but NEVER skip CLAUDE.md.
 
+## Context Management
+
+This is a long process. If context fills up during scanning:
+- Progress is saved in `.claude/learn-progress.json` — nothing is lost
+- The user can say **"continue"** or re-paste learn.md to resume from the exact point
+- Use `/compact` to compress context if you need more room mid-phase
+
 ## CRITICAL — Stay On Task
 
 Do NOT suggest installing tools, packages, extensions, Slack, or anything the user didn't ask for.
