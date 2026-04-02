@@ -3,35 +3,38 @@
 # Claude Boost — PreToolUse Guard (Universal)
 # ──────────────────────────────────────────────────────────────────────────────
 #
-# Works with ANY language/framework. No PHP required at runtime.
-# This hook is ALWAYS active, regardless of permission level.
+# Works with ANY language/framework. No external dependencies (no jq, no php).
+# Fails OPEN — if parsing fails, the action is allowed (never blocks by accident).
 # Even 'bypass_all' cannot skip Tier 1 guards.
 #
 # Install location: .claude/hooks/preToolUse.sh
 # Managed by: claude-boost package
 # ──────────────────────────────────────────────────────────────────────────────
 
-set -euo pipefail
+# ── Read input (fail-open) ──────────────────────────────────────────────────
+input=$(cat 2>/dev/null) || { echo '{"decision":"allow"}'; exit 0; }
 
-# ── Verify jq is available ──────────────────────────────────────────────────
-if ! command -v jq &> /dev/null; then
-    echo '{"decision":"block","reason":"Guard: jq is not installed. Install: brew install jq (macOS) or apt install jq (Linux)."}'
-    exit 0
-fi
+# ── Parse JSON without jq — grep + sed only ─────────────────────────────────
+extract() {
+    echo "$input" | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -1 | sed 's/.*: *"//;s/"$//'
+}
 
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.tool_name // ""')
-command=$(echo "$input" | jq -r '.tool_input.command // ""')
-file_path=$(echo "$input" | jq -r '.tool_input.file_path // .tool_input.path // ""')
+tool_name=$(extract "tool_name")
+command=$(extract "command")
+file_path=$(extract "file_path")
+[ -z "$file_path" ] && file_path=$(extract "path")
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# If we couldn't parse anything, fail open
+[ -z "$tool_name" ] && { echo '{"decision":"allow"}'; exit 0; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
 PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 GUARD_LOG="$PROJECT_ROOT/.claude/logs/guard.log"
 
 log_block() {
     local reason="$1"
-    mkdir -p "$(dirname "$GUARD_LOG")"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] BLOCKED | tool=$tool_name | cmd=$command | file=$file_path | reason=$reason" >> "$GUARD_LOG"
+    mkdir -p "$(dirname "$GUARD_LOG")" 2>/dev/null
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] BLOCKED | tool=$tool_name | cmd=$command | file=$file_path | reason=$reason" >> "$GUARD_LOG" 2>/dev/null
 }
 
 block() {
@@ -120,8 +123,9 @@ fi
 
 PERM_LEVEL="standard"
 if [ -f "$PROJECT_ROOT/.claude/settings.json" ]; then
-    configured_level=$(jq -r '.permission_level // "standard"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null)
-    if [ -n "$configured_level" ] && [ "$configured_level" != "null" ]; then
+    # Parse permission_level without jq — grep + sed
+    configured_level=$(grep -o '"permission_level"[[:space:]]*:[[:space:]]*"[^"]*"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null | head -1 | sed 's/.*: *"//;s/"$//')
+    if [ -n "$configured_level" ]; then
         PERM_LEVEL="$configured_level"
     fi
 fi

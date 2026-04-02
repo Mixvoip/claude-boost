@@ -18,6 +18,6 @@ abstract class TestCase extends BaseTestCase
 
     protected function getEnvironmentSetUp($app): void
     {
-        $app['config']->set('claude-boost.package_name', 'ualimxvp/claude-boost');
+        $app['config']->set('claude-boost.package_name', 'mixvoip/claude-boost');
     }
 }

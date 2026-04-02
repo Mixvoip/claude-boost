@@ -1,6 +1,6 @@
 # Claude Boost
 
-[![GitHub release](https://img.shields.io/github/v/tag/ualimxvp/claude-boost?label=release)](https://github.com/ualimxvp/claude-boost/releases)
+[![GitHub release](https://img.shields.io/github/v/tag/Mixvoip/claude-boost?label=release)](https://github.com/Mixvoip/claude-boost/releases)
 [![Sponsored by Mixvoip](https://img.shields.io/badge/sponsored%20by-Mixvoip-blue)](https://www.mixvoip.com)
 [![Made in Luxembourg](https://img.shields.io/badge/made%20in-Luxembourg%20%F0%9F%87%B1%F0%9F%87%BA-red)]()
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -13,7 +13,7 @@ Drop one folder into any project — PHP, JavaScript, Python, Go, Rust, Ruby, Ja
 
 ```bash
 # Clone Claude Boost
-git clone https://github.com/ualimxvp/claude-boost.git
+git clone https://github.com/Mixvoip/claude-boost.git
 
 # Copy the init folder into your project
 cp -r claude-boost/.claude/init your-project/.claude/init
@@ -28,7 +28,7 @@ That's it. Claude handles everything interactively.
 ### Laravel Projects
 
 ```bash
-composer require ualimxvp/claude-boost
+composer require mixvoip/claude-boost
 php artisan claude:init
 claude "Read .claude/init/learn.md and execute every task in it"
 ```
@@ -118,7 +118,7 @@ If you want to change settings (permissions, features, etc.), just say "yes" whe
 ### Laravel: After Package Upgrade
 
 ```bash
-composer update ualimxvp/claude-boost
+composer update mixvoip/claude-boost
 php artisan claude:update
 ```
 
@@ -142,7 +142,7 @@ Claude will:
 5. Remove only Claude Boost artifacts
 6. Show you the full diff to review before you commit
 
-For Laravel projects, also run `composer remove ualimxvp/claude-boost` after.
+For Laravel projects, also run `composer remove mixvoip/claude-boost` after.
 
 ---
 
@@ -320,7 +320,7 @@ Built in partnership with [Mixvoip](https://www.mixvoip.com). Thanks for support
 
 ## Contributing
 
-Found a bug or have an idea? [Open an issue](https://github.com/ualimxvp/claude-boost/issues) or submit a pull request.
+Found a bug or have an idea? [Open an issue](https://github.com/Mixvoip/claude-boost/issues) or submit a pull request.
 
 ## License
 
@@ -330,4 +330,4 @@ Found a bug or have an idea? [Open an issue](https://github.com/ualimxvp/claude-
 
 **One file. Zero commands. Makes Claude smart about your codebase.**
 
-[GitHub](https://github.com/ualimxvp/claude-boost) | [Packagist](https://packagist.org/packages/ualimxvp/claude-boost) | [Mixvoip](https://www.mixvoip.com)
+[GitHub](https://github.com/Mixvoip/claude-boost) | [Packagist](https://packagist.org/packages/mixvoip/claude-boost) | [Mixvoip](https://www.mixvoip.com)

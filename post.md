@@ -48,7 +48,7 @@ claude "Read .claude/init/learn.md and execute every task in it"
 **Laravel projects:**
 
 ```bash
-composer require codewithali/claude-boost
+composer require mixvoip/claude-boost
 php artisan claude:init
 claude "Read .claude/init/learn.md and execute every task in it"
 ```
@@ -80,9 +80,9 @@ A big thank you to Mixvoip for sponsoring this work and supporting open-source c
 
 ## Links
 
-- **GitHub:** [ualimxvp/claude-boost](https://github.com/ualimxvp/claude-boost)
+- **GitHub:** [Mixvoip/claude-boost](https://github.com/Mixvoip/claude-boost)
 - **License:** MIT (use it anywhere, no restrictions)
-- **Packagist (Laravel):** `codewithali/claude-boost`
+- **Packagist (Laravel):** `mixvoip/claude-boost`
 
 ---
 

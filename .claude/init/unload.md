@@ -241,7 +241,7 @@ Show the user:
 >
 > **If this is a Laravel project**, also run:
 > ```
-> composer remove ualimxvp/claude-boost
+> composer remove mixvoip/claude-boost
 > ```
 >
 > **Review the changes.** When satisfied:
