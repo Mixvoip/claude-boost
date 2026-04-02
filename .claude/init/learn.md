@@ -318,7 +318,7 @@ Stack: {language}/{framework} | Permissions: `{permission_level}`
 - `.claude/skills/{module}.md` — read ONLY when modifying that specific module
 
 ## Safety
-Guard hooks active. See .claude/init/guard-rules.md
+Guard hooks active — destructive commands are blocked automatically.
 
 ## Status
 Draft — run learn.md to complete the deep scan.
@@ -1044,12 +1044,12 @@ Permissions: `{permission_level}`
 - `.claude/guidelines.md` — read ONLY when unsure about conventions or patterns
 - `.claude/skills/{module}.md` — read ONLY when modifying that specific module
 
-## Maintenance
-- Update .claude/registry.json when you create/remove/rename classes or functions
-- Update .claude/skills/ when a module changes significantly
+## Maintenance (only after significant changes)
+- Update .claude/registry.json if you added new classes/services or removed existing ones
+- Update .claude/skills/{module}.md if a module's API or structure changed
 
 ## Safety
-Guard hooks active. See .claude/init/guard-rules.md for full list.
+Guard hooks active — destructive commands are blocked automatically.
 ```
 
 **Rules:**
@@ -1118,10 +1118,10 @@ from CLAUDE.md's "Context Files" and "Maintenance" sections.
 2. Check conventions in `.claude/guidelines.md` only if unsure about patterns
 3. If a file has many dependents (check registry), warn the user
 
-### Maintenance (after changes, not before)
-1. Update `.claude/registry.json` if you created/removed/renamed classes or functions
-2. Update skill files when modules change significantly
-3. Update `CLAUDE.md` if major architecture changes happen
+### Maintenance (only after significant changes, not small edits)
+1. Update `.claude/registry.json` only if you added new classes/services or removed existing ones
+2. Update skill files only if a module's API or structure changed
+3. Update `CLAUDE.md` only if major architecture changes happen
 
 ---
 
