@@ -77,8 +77,13 @@ your-project/
 │   │   ├── guard-rules.md
 │   │   ├── plan.md                 <- Ticket planner agent
 │   │   ├── develop.md              <- Autonomous developer agent
-│   │   ├── review.md               <- Autonomous reviewer agent
+│   │   ├── review.md               <- Autonomous reviewer agent (lead orchestrator)
 │   │   ├── AGENTS.md               <- Agent pipeline guide
+│   │   ├── agents/                 <- Specialist review agents
+│   │   │   ├── review-quality.md   <- Code quality & conventions
+│   │   │   ├── review-performance.md <- Performance & query optimization
+│   │   │   ├── review-security.md  <- Security (OWASP Top 10)
+│   │   │   └── review-breakage.md  <- Breakage & regression detection
 │   │   └── templates/
 │   │       └── skill.md
 │   ├── guidelines/                  <- Git standards and other guides
@@ -177,14 +182,14 @@ The hook is pure bash — no PHP runtime needed. Works for any language.
 Claude Boost includes 3 autonomous agents that turn your ticket workflow into a CI/CD-like pipeline:
 
 ```
-You + Planner ──> Developer ──> Reviewer ──> You merge
+You + Planner ──> Developer ──> Reviewer (4 specialists) ──> You merge
 ```
 
 | Agent | What It Does | Mode |
 |-------|-------------|------|
 | **Planner** (`plan.md`) | Interviews you, scans codebase, creates structured tickets | Interactive |
 | **Developer** (`develop.md`) | Picks up tickets, plans, uses parallel sub-agents, opens PRs/MRs | Autonomous |
-| **Reviewer** (`review.md`) | 3 parallel specialist reviews (quality + tests + security), approve or return | Autonomous |
+| **Reviewer** (`review.md`) | 4 parallel specialist reviews (quality + performance + security + breakage), batch review with inline comments | Autonomous |
 
 ### Quick Start
 
@@ -216,7 +221,7 @@ The agents auto-detect your platform from `.claude/settings.json` or directory s
 
 1. **You + Planner** discuss the feature → Planner creates a structured ticket with file paths, acceptance criteria, and test plan
 2. **Developer** picks up the ticket → breaks it into sub-tasks → launches parallel agents → opens PR/MR
-3. **Reviewer** picks up the PR/MR → dispatches 3 specialist reviewers → approves or returns with specific fixes
+3. **Reviewer** picks up the PR/MR → dispatches 4 specialist reviewers → posts inline comments as a batch review → approves or returns with specific fixes
 4. **You merge** — the boring part is automated
 
 Returned tickets go back to the Developer (max 2 returns, then blocked for human intervention). See `.claude/init/AGENTS.md` for full documentation.

@@ -55,8 +55,9 @@ You + Planner          Developer             Reviewer
     |                     |- Opens PR/MR        |
     |                     |  [Ready for Review] |
     |                     |                     |- Picks up ticket
-    |                     |                     |- 3 parallel reviewers
-    |                     |                     |- Quality + Tests + Security
+    |                     |                     |- 4 parallel reviewers
+    |                     |                     |- Quality + Perf + Security + Breakage
+    |                     |                     |- Posts inline comments
     |                     |                     |- Approve or Return
     |                     |                     |
     |                     |- Fixes if returned <-
@@ -89,6 +90,38 @@ Open -> Work In Progress -> Ready for Review -> Ready for Developer Feedback -> 
 | **Planner** (`plan.md`) | Interactive | Works with you — asks questions, shows drafts, waits for approval |
 | **Developer** (`develop.md`) | Autonomous | Runs continuously — scans for tickets, develops, opens PRs/MRs |
 | **Reviewer** (`review.md`) | Autonomous | Runs continuously — scans for PRs/MRs, reviews, approves or returns |
+
+## Review Agent Architecture
+
+The reviewer dispatches **4 specialist agents** in parallel, each with its own prompt file:
+
+```
+.claude/init/agents/
+├── review-quality.md      — Code quality, conventions, architecture
+├── review-performance.md  — Query optimization, N+1, caching, memory
+├── review-security.md     — OWASP Top 10, injection, auth, data exposure
+└── review-breakage.md     — Stale references, semantic mismatches, orphans
+```
+
+### Review Workflow
+
+1. **Intake** — Fetch PR/MR diff and metadata
+2. **Dispatch** — Launch 4 specialist agents in parallel
+3. **Consolidate** — Merge findings, deduplicate, assign severity
+4. **Post** — Create inline comments on the diff (GitLab: Draft Notes API, GitHub: Review API)
+5. **Submit** — Bulk publish all comments as a single batch review
+6. **Verdict** — Approve, approve with comments, or request changes
+7. **Re-review** — On subsequent reviews, resolve previously fixed threads
+
+### Bot Identity (Optional)
+
+To have review comments appear as a bot account instead of your personal account, add a bot token to your `.env`:
+
+```
+GITLAB_BOT_TOKEN="glpat-xxxxxxxxxxxxxxxxxxxx"
+```
+
+The reviewer auto-detects the token. If not found, it uses the standard CLI (comments appear as your account).
 
 ## Tips
 

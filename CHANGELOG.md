@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Enhanced Review Agent — 4 Specialist Sub-Agents with Batch Review
+
+The review agent (`review.md`) has been upgraded from 3 inline agent prompts to 4 dedicated
+specialist agents with full git platform API integration.
+
+### Added
+- `.claude/init/agents/review-quality.md` — Code quality & consistency specialist
+- `.claude/init/agents/review-performance.md` — Performance specialist (N+1, caching, memory)
+- `.claude/init/agents/review-security.md` — Security specialist (OWASP Top 10)
+- `.claude/init/agents/review-breakage.md` — Breakage & regression detection (stale references, semantic mismatches, orphans)
+- Batch review workflow: inline comments are created as pending, then published together as a single review
+- Bot identity support: review comments can appear as a dedicated bot account (optional)
+- Re-review workflow: previously raised threads are resolved when fixes are applied
+- GitLab Draft Notes API integration for batch review publishing
+- GitHub Pull Request Review API integration
+- Severity-based verdicts: APPROVE / APPROVE WITH COMMENTS / REQUEST CHANGES
+
+### Changed
+- Review agent now dispatches 4 specialists (was 3) — added dedicated performance and breakage agents
+- Specialist agents are separate `.md` files in `.claude/init/agents/` instead of inline prompts
+- AGENTS.md updated with review architecture diagram, bot identity setup, and per-agent documentation
+- Comment format now uses structured "Why" + "Suggested fix" sections
+
 ## [2.0.0] - 2026-04-02
 
 ### Simplification Release
